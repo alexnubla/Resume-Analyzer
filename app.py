@@ -95,22 +95,63 @@ with tab1:
             
             match_score = (len(common) / len(jd_tokens)) * 100 if jd_tokens else 0
             
-            # --- PRIORITIZE MISSING KEYWORDS BY FREQUENCY WITH NOISE FILTER ---
+            # --- SMART KEYWORD FILTERING ---
             jd_word_counts = Counter(clean(job_description))
             
-            # Define a "Noise List" of words that are frequent but not useful skills
+            # 1. Generic Noise (Words that appear everywhere)
             noise_words = {
                 'experience', 'required', 'ability', 'work', 'team', 'year', 
                 'years', 'time', 'day', 'week', 'month', 'role', 'position',
                 'company', 'business', 'industry', 'field', 'level', 'senior',
                 'junior', 'lead', 'manager', 'department', 'group', 'unit',
-                'responsibilities', 'duties', 'tasks', 'activities', 'perform'
+                'responsibilities', 'duties', 'tasks', 'activities', 'perform',
+                'provide', 'support', 'ensure', 'maintain', 'create', 'manage',
+                'handle', 'process', 'service', 'client', 'customer', 'project',
+                'program', 'plan', 'strategy', 'goal', 'objectives', 'results',
+                'success', 'growth', 'development', 'operations', 'functions'
             }
+
+            # 2. Fluff/Subjective Words (Hard to prove on a resume)
+            fluff_words = {
+                'exceptional', 'outstanding', 'excellent', 'great', 'good',
+                'strong', 'effective', 'efficient', 'successful', 'proven',
+                'dynamic', 'motivated', 'passionate', 'dedicated', 'reliable',
+                'trustworthy', 'honest', 'creative', 'innovative', 'flexible',
+                'adaptability', 'collaborative', 'professional', 'positive',
+                'enthusiastic', 'confident', 'ambitious', 'driven', 'focused'
+            }
+
+            # 3. Common Verbs & Prepositions (ATS cares more about Nouns/Skills)
+            common_verbs = {
+                'use', 'using', 'used', 'make', 'made', 'get', 'got', 'go',
+                'went', 'see', 'saw', 'know', 'knew', 'think', 'thought',
+                'want', 'wanted', 'need', 'needed', 'help', 'helped', 'take',
+                'took', 'give', 'gave', 'find', 'found', 'tell', 'told',
+                'ask', 'asked', 'try', 'tried', 'leave', 'left', 'call',
+                'called', 'move', 'moved', 'live', 'lived', 'believe', 'hold',
+                'bring', 'brought', 'happen', 'write', 'wrote', 'sit', 'sat',
+                'stand', 'stood', 'lose', 'lost', 'pay', 'paid', 'meet', 'met',
+                'include', 'included', 'continue', 'set', 'learn', 'change',
+                'play', 'run', 'like', 'build', 'develop', 'carry', 'break',
+                'without', 'within', 'across', 'along', 'among', 'around',
+                'before', 'behind', 'below', 'beneath', 'beside', 'between',
+                'beyond', 'during', 'except', 'inside', 'into', 'near', 'onto',
+                'upon', 'toward', 'throughout', 'minus', 'plus', 'versus',
+                'per', 'via', 'castelion', 'manufacturing', 'government',
+                'employment', 'problems', 'leaders', 'test', 'applicable',
+                'requirements', 'ensure', 'develop', 'build'
+            }
+
+            # Filter Logic: Keep only words that are NOT in any of the bad lists
+            meaningful_missing = [
+                word for word in missing 
+                if word not in noise_words 
+                and word not in fluff_words 
+                and word not in common_verbs
+                and len(word) > 3
+            ]
             
-            # Filter out noise words from the missing list
-            meaningful_missing = [word for word in missing if word not in noise_words and len(word) > 3]
-            
-            # Sort the meaningful missing words by frequency
+            # Sort by frequency in JD
             prioritized_missing = sorted(meaningful_missing, key=lambda x: jd_word_counts[x], reverse=True)
             
             # 4. Simple Skills Check
