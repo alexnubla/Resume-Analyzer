@@ -95,9 +95,23 @@ with tab1:
             
             match_score = (len(common) / len(jd_tokens)) * 100 if jd_tokens else 0
             
-            # --- PRIORITIZE MISSING KEYWORDS BY FREQUENCY ---
+            # --- PRIORITIZE MISSING KEYWORDS BY FREQUENCY WITH NOISE FILTER ---
             jd_word_counts = Counter(clean(job_description))
-            prioritized_missing = sorted(missing, key=lambda x: jd_word_counts[x], reverse=True)
+            
+            # Define a "Noise List" of words that are frequent but not useful skills
+            noise_words = {
+                'experience', 'required', 'ability', 'work', 'team', 'year', 
+                'years', 'time', 'day', 'week', 'month', 'role', 'position',
+                'company', 'business', 'industry', 'field', 'level', 'senior',
+                'junior', 'lead', 'manager', 'department', 'group', 'unit',
+                'responsibilities', 'duties', 'tasks', 'activities', 'perform'
+            }
+            
+            # Filter out noise words from the missing list
+            meaningful_missing = [word for word in missing if word not in noise_words and len(word) > 3]
+            
+            # Sort the meaningful missing words by frequency
+            prioritized_missing = sorted(meaningful_missing, key=lambda x: jd_word_counts[x], reverse=True)
             
             # 4. Simple Skills Check
             skills = ['python', 'java', 'sql', 'aws', 'react', 'docker', 'git', 'agile', 'leadership', 'communication', 'project management']
@@ -134,9 +148,9 @@ with tab1:
             st.subheader("⚠️ Top Missing Keywords")
             if prioritized_missing:
                 st.write(", ".join(prioritized_missing[:15]))
-                st.info(f"Total missing: {len(missing)}. Focus on the top ones!")
+                st.info(f"Total meaningful missing: {len(meaningful_missing)}. Focus on the top ones!")
             else:
-                st.success("Great! All JD keywords are present!")
+                st.success("Great! All meaningful JD keywords are present!")
             
             # 4. Skills Detected
             st.subheader("🎯 Skills Detected")
@@ -154,8 +168,8 @@ with tab1:
             if match_score < 50:
                 improvements.append("🔴 **Critical:** Your keyword match is low. Try to naturally incorporate more terms from the Job Description.")
             
-            if len(missing) > 20:
-                improvements.append("🟡 **Volume:** You are missing over 20 keywords. Review the 'Top Missing Keywords' list above.")
+            if len(meaningful_missing) > 15:
+                improvements.append("🟡 **Volume:** You are missing over 15 meaningful keywords. Review the list above.")
             
             if len(found_skills) < 3:
                 improvements.append("🟡 **Skills Gap:** The system didn't detect many standard technical skills. Ensure your tech stack is clearly listed.")
