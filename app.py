@@ -95,10 +95,51 @@ with tab1:
             
             match_score = (len(common) / len(jd_tokens)) * 100 if jd_tokens else 0
             
-            # --- ADVANCED CONTEXT-AWARE FILTERING ---
-            jd_word_counts = Counter(clean(job_description))
+            # --- SECTION-BASED WEIGHTING & SMART FILTERING ---
             
-            # 1. The "Junk" List: HR/Legal/EEO language that doesn't matter for skills
+            # Define High-Value Sections (Keywords that should be prioritized)
+            high_value_headers = [
+                'responsibilities', 'duties', 'what you\'ll do', 'role overview',
+                'qualifications', 'requirements', 'what you\'ll need', 'basic qualifications',
+                'preferred skills', 'experience', 'technical skills', 'competencies'
+            ]
+            
+            # Define Low-Value/Noise Sections (Keywords to ignore or deprioritize)
+            low_value_headers = [
+                'benefits', 'eeo', 'equal opportunity', 'affirmative action', 
+                'disclaimer', 'other duties', 'additional eligibility', 
+                'ear/itar', 'export control', 'citizenship', 'security clearance',
+                'accommodation', 'hiring process', 'about the company'
+            ]
+
+            # Split JD into lines to find sections
+            jd_lines = job_description.lower().split('\n')
+            
+            current_section_weight = 1.0
+            weighted_jd_tokens = []
+            
+            for line in jd_lines:
+                line_stripped = line.strip()
+                
+                # Check if line is a header
+                is_high_value = any(header in line_stripped for header in high_value_headers)
+                is_low_value = any(header in line_stripped for header in low_value_headers)
+                
+                if is_high_value:
+                    current_section_weight = 3.0 # Boost weight for responsibilities/quals
+                elif is_low_value:
+                    current_section_weight = 0.1 # Deprioritize legal/HR fluff
+                elif line_stripped.endswith(':') or (len(line_stripped.split()) < 5 and line_stripped.isupper()):
+                    # Generic header detection
+                    current_section_weight = 1.0
+                
+                # Add tokens from this line with their weight
+                line_tokens = clean(line)
+                weighted_jd_tokens.extend(line_tokens * int(current_section_weight * 10)) # Multiply frequency by weight
+
+            jd_word_counts = Counter(weighted_jd_tokens)
+            
+            # Filter Logic: Keep only words that are NOT in the junk lists
             junk_words = {
                 'please', 'note', 'designed', 'cover', 'contain', 'comprehensive',
                 'listing', 'activities', 'duties', 'responsibilities', 'required',
@@ -133,7 +174,6 @@ with tab1:
                 'toward', 'action', 'standards', 'accountability', 'results'
             }
 
-            # 2. Generic Business Verbs/Nouns (Too common to be useful)
             generic_words = {
                 'build', 'lead', 'manage', 'support', 'ensure', 'develop',
                 'create', 'provide', 'maintain', 'handle', 'process', 'service',
@@ -157,7 +197,6 @@ with tab1:
                 'industry', 'team', 'work', 'experience', 'ability', 'time'
             }
 
-            # Filter Logic: Keep only words that are NOT in the junk/generic lists
             meaningful_missing = [
                 word for word in missing 
                 if word not in junk_words 
@@ -165,7 +204,7 @@ with tab1:
                 and len(word) > 3
             ]
             
-            # Sort by frequency in JD
+            # Sort by weighted frequency
             prioritized_missing = sorted(meaningful_missing, key=lambda x: jd_word_counts[x], reverse=True)
             
             # 4. Simple Skills Check
@@ -200,7 +239,7 @@ with tab1:
                 st.warning("No matching keywords found.")
             
             # 3. Missing Keywords
-            st.subheader("⚠️ Top Missing Keywords")
+            st.subheader("⚠️ Top Missing Keywords (Weighted)")
             if prioritized_missing:
                 st.write(", ".join(prioritized_missing[:15]))
                 st.info(f"Total meaningful missing: {len(meaningful_missing)}. Focus on the top ones!")
