@@ -95,59 +95,73 @@ with tab1:
             
             match_score = (len(common) / len(jd_tokens)) * 100 if jd_tokens else 0
             
-            # --- SMART KEYWORD FILTERING ---
+            # --- ADVANCED CONTEXT-AWARE FILTERING ---
             jd_word_counts = Counter(clean(job_description))
             
-            # 1. Generic Noise (Words that appear everywhere)
-            noise_words = {
-                'experience', 'required', 'ability', 'work', 'team', 'year', 
-                'years', 'time', 'day', 'week', 'month', 'role', 'position',
-                'company', 'business', 'industry', 'field', 'level', 'senior',
-                'junior', 'lead', 'manager', 'department', 'group', 'unit',
-                'responsibilities', 'duties', 'tasks', 'activities', 'perform',
-                'provide', 'support', 'ensure', 'maintain', 'create', 'manage',
-                'handle', 'process', 'service', 'client', 'customer', 'project',
-                'program', 'plan', 'strategy', 'goal', 'objectives', 'results',
-                'success', 'growth', 'development', 'operations', 'functions'
+            # 1. The "Junk" List: HR/Legal/EEO language that doesn't matter for skills
+            junk_words = {
+                'please', 'note', 'designed', 'cover', 'contain', 'comprehensive',
+                'listing', 'activities', 'duties', 'responsibilities', 'required',
+                'employee', 'change', 'time', 'notice', 'additional', 'eligibility',
+                'requirements', 'position', 'may', 'require', 'access', 'classified',
+                'information', 'restricted', 'sites', 'systems', 'determined',
+                'company', 'applicable', 'government', 'employment', 'role',
+                'contingent', 'upon', 'ability', 'obtain', 'maintain', 'security',
+                'clearance', 'other', 'authorization', 'satisfy', 'citizenship',
+                'imposed', 'law', 'regulation', 'executive', 'order', 'contract',
+                'notified', 'when', 'such', 'affirmative', 'action', 'eeo',
+                'statement', 'equal', 'opportunity', 'employer', 'committed',
+                'providing', 'opportunities', 'applicants', 'employees', 'without',
+                'regard', 'race', 'color', 'religion', 'sex', 'sexual', 'orientation',
+                'gender', 'identity', 'national', 'origin', 'age', 'disability',
+                'genetic', 'protected', 'veteran', 'status', 'characteristic',
+                'fostering', 'workplace', 'where', 'decisions', 'based',
+                'qualifications', 'business', 'needs', 'perform', 'essential',
+                'functions', 'reasonable', 'accommodation', 'requests',
+                'considered', 'individual', 'basis', 'handled', 'accordance',
+                'ear', 'itar', 'export', 'controlled', 'hiring', 'contractor',
+                'licensing', 'bureau', 'industry', 'directorate', 'defense',
+                'trade', 'controls', 'benefits', 'package', 'refer', 'bottom',
+                'careers', 'page', 'details', 'castelion', 'hypersonic',
+                'weapons', 'speed', 'scale', 'restore', 'american', 'deterrence',
+                'achieving', 'exceptional', 'engineering', 'rapid', 'testing',
+                'manufacturing', 'capacity', 'supported', 'secure', 'reliable',
+                'infrastructure', 'keep', 'pace', 'hands', 'on', 'leadership',
+                'troubleshooting', 'critical', 'outage', 'challenging', 'network',
+                'architecture', 'recruiting', 'making', 'high', 'impact',
+                'investment', 'combines', 'judgment', 'relentless', 'bias',
+                'toward', 'action', 'standards', 'accountability', 'results'
             }
 
-            # 2. Fluff/Subjective Words (Hard to prove on a resume)
-            fluff_words = {
-                'exceptional', 'outstanding', 'excellent', 'great', 'good',
-                'strong', 'effective', 'efficient', 'successful', 'proven',
-                'dynamic', 'motivated', 'passionate', 'dedicated', 'reliable',
-                'trustworthy', 'honest', 'creative', 'innovative', 'flexible',
-                'adaptability', 'collaborative', 'professional', 'positive',
-                'enthusiastic', 'confident', 'ambitious', 'driven', 'focused'
+            # 2. Generic Business Verbs/Nouns (Too common to be useful)
+            generic_words = {
+                'build', 'lead', 'manage', 'support', 'ensure', 'develop',
+                'create', 'provide', 'maintain', 'handle', 'process', 'service',
+                'client', 'customer', 'project', 'program', 'plan', 'strategy',
+                'goal', 'objectives', 'success', 'growth', 'operations',
+                'functions', 'use', 'using', 'used', 'make', 'made', 'get',
+                'got', 'go', 'went', 'see', 'saw', 'know', 'knew', 'think',
+                'thought', 'want', 'wanted', 'need', 'needed', 'help', 'helped',
+                'take', 'took', 'give', 'gave', 'find', 'found', 'tell', 'told',
+                'ask', 'asked', 'try', 'tried', 'leave', 'left', 'call', 'called',
+                'move', 'moved', 'live', 'lived', 'believe', 'hold', 'bring',
+                'brought', 'happen', 'write', 'wrote', 'sit', 'sat', 'stand',
+                'stood', 'lose', 'lost', 'pay', 'paid', 'meet', 'met', 'include',
+                'included', 'continue', 'set', 'learn', 'change', 'play', 'run',
+                'like', 'carry', 'break', 'within', 'across', 'along', 'among',
+                'around', 'before', 'behind', 'below', 'beneath', 'beside',
+                'between', 'beyond', 'during', 'except', 'inside', 'into', 'near',
+                'onto', 'upon', 'toward', 'throughout', 'minus', 'plus', 'versus',
+                'per', 'via', 'year', 'years', 'day', 'week', 'month', 'level',
+                'senior', 'junior', 'department', 'group', 'unit', 'field',
+                'industry', 'team', 'work', 'experience', 'ability', 'time'
             }
 
-            # 3. Common Verbs & Prepositions (ATS cares more about Nouns/Skills)
-            common_verbs = {
-                'use', 'using', 'used', 'make', 'made', 'get', 'got', 'go',
-                'went', 'see', 'saw', 'know', 'knew', 'think', 'thought',
-                'want', 'wanted', 'need', 'needed', 'help', 'helped', 'take',
-                'took', 'give', 'gave', 'find', 'found', 'tell', 'told',
-                'ask', 'asked', 'try', 'tried', 'leave', 'left', 'call',
-                'called', 'move', 'moved', 'live', 'lived', 'believe', 'hold',
-                'bring', 'brought', 'happen', 'write', 'wrote', 'sit', 'sat',
-                'stand', 'stood', 'lose', 'lost', 'pay', 'paid', 'meet', 'met',
-                'include', 'included', 'continue', 'set', 'learn', 'change',
-                'play', 'run', 'like', 'build', 'develop', 'carry', 'break',
-                'without', 'within', 'across', 'along', 'among', 'around',
-                'before', 'behind', 'below', 'beneath', 'beside', 'between',
-                'beyond', 'during', 'except', 'inside', 'into', 'near', 'onto',
-                'upon', 'toward', 'throughout', 'minus', 'plus', 'versus',
-                'per', 'via', 'castelion', 'manufacturing', 'government',
-                'employment', 'problems', 'leaders', 'test', 'applicable',
-                'requirements', 'ensure', 'develop', 'build'
-            }
-
-            # Filter Logic: Keep only words that are NOT in any of the bad lists
+            # Filter Logic: Keep only words that are NOT in the junk/generic lists
             meaningful_missing = [
                 word for word in missing 
-                if word not in noise_words 
-                and word not in fluff_words 
-                and word not in common_verbs
+                if word not in junk_words 
+                and word not in generic_words
                 and len(word) > 3
             ]
             
