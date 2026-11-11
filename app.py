@@ -3,7 +3,7 @@ import PyPDF2
 import docx
 import re
 import nltk
-from nltk.tokenize import word_tokenize
+from nltk.tokenize import word_tokenize, sent_tokenize
 from collections import Counter
 
 # Download NLTK data quietly if not already present
@@ -265,6 +265,25 @@ with tab1:
             jd_word_counts = Counter(clean(job_description))
             prioritized_missing = sorted(meaningful_missing, key=lambda x: jd_word_counts[x], reverse=True)
             
+            # --- NEW SCORES: FORMATTING, COMPLETENESS, READABILITY ---
+            
+            # 1. Formatting Score (Simple heuristic: check for clean lines vs complex tables)
+            formatting_score = 90 # Default high
+            if len(resume_text.split('\n')) < 10: formatting_score -= 20 # Too few lines
+            if re.search(r'\|.*\|.*\|', resume_text): formatting_score -= 15 # Contains markdown tables
+            
+            # 2. Completeness Score (Check for key sections)
+            completeness_score = 0
+            key_sections = ['experience', 'education', 'skills', 'contact', 'summary']
+            for section in key_sections:
+                if section in resume_text.lower():
+                    completeness_score += 20
+            
+            # 3. Readability Score (Based on sentence length)
+            sentences = sent_tokenize(resume_text)
+            avg_len = sum(len(s.split()) for s in sentences) / max(len(sentences), 1)
+            readability_score = max(0, 100 - (avg_len - 15) * 2) # Penalize very long sentences
+
             # --- TRANSFERABLE SKILLS BRIDGE ---
             transferable_map = {
                 "Defense & Aerospace": {
@@ -296,6 +315,15 @@ with tab1:
                 if rejection_prob > 70: st.error("⚠️ High Risk")
                 elif rejection_prob > 40: st.warning("⚠️ Moderate Risk")
                 else: st.success("✅ Low Risk")
+
+            # New Scores Row
+            col_c, col_d, col_e = st.columns(3)
+            with col_c:
+                st.metric("Formatting Score", f"{formatting_score}/100")
+            with col_d:
+                st.metric("Completeness Score", f"{completeness_score}/100")
+            with col_e:
+                st.metric("Readability Score", f"{readability_score:.1f}/100")
 
             st.markdown("---")
 
@@ -561,7 +589,11 @@ with tab5:
                 "Four Pillars", "IT Transformation", "Legacy Modernization", "Governed AI", 
                 "Visual FoxPro", "C#", "Python", "Claude", "QWEN", "SOC 2", "PCI-DSS", 
                 "HIPAA", "NIST", "WCAG", "ADA", "ELLA", "Enterprise AI", "LLM routing", 
-                "Big Swing", "AI Governance", "Data Privacy", "Model Lifecycle"
+                "Big Swing", "AI Governance", "Data Privacy", "Model Lifecycle", "Zero Trust",
+                "Okta", "Cloudflare", "Kubernetes", "Docker", "CI/CD", "EMR", "EHR", 
+                "Revenue Cycle", "Voice AI", "Conversational AI", "Agentic AI", "RAG",
+                "Google Cloud", "BigQuery", "FOCUS", "ASC", "Optical", "Claims", "EBITDA",
+                "Center of Excellence", "CoE", "Dashboards", "IVR", "Patient Satisfaction"
             ]
             
             found_terms = [term for term in high_value_terms if term.lower() in experience_block.lower()]
@@ -603,6 +635,15 @@ with tab5:
             # 5. The Modernization & Change Leader
             st.markdown("### 🚀 5. The Modernization & Change Leader")
             st.info(f"**Focus:** Culture, Scaling, and Adoption.\n\n- Led cultural transformation by democratizing **{', '.join(found_terms[:2])}** and upskilling non-technical teams.\n- Built and scaled high-performing organizations, fostering a culture of accountability and rapid innovation around **{jd_high_value[0] if jd_high_value else 'new technologies'}**.")
+
+            # SUMMARY OF WHY THIS WORKS
+            st.markdown("---")
+            st.markdown("### 💡 Why this Narrative Works")
+            st.markdown(f"""
+            - **Specificity:** By using terms like **'{found_terms[0] if found_terms else 'your key achievement'}'**, we move beyond generic management speak to show tangible technical leadership.
+            - **Relevance:** We aligned your experience with the JD's priority on **'{jd_high_value[0] if jd_high_value else 'core business goals'}'**, showing you understand their specific pain points.
+            - **Impact:** The language focuses on **outcomes** (ROI, governance, scaling) rather than just duties, which is what C-suite hiring managers look for.
+            """)
 
         elif generate_button and not experience_block:
              st.warning("Please paste some text from your resume first!")
