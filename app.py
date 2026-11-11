@@ -21,7 +21,7 @@ st.set_page_config(page_title="Resume ATS Evaluator", page_icon="📄", layout="
 st.title("📄 Resume ATS Evaluator")
 
 # Tabs for different features
-tab1, tab2, tab3 = st.tabs(["📊 ATS Analysis", "🤖 ATS Parseability Check", "📝 AI Resume Rewriter"])
+tab1, tab2, tab3, tab4 = st.tabs(["📊 ATS Analysis", "🤖 ATS Parseability Check", "📝 AI Resume Rewriter", "👔 C-Suite Narrative"])
 
 with st.sidebar:
     st.header("Instructions")
@@ -479,6 +479,76 @@ with tab3:
         st.info("💡 **Pro Tip:** Copy these suggestions and adapt them to your specific achievements at InfoSend, ICANN, or Acuity Eye Group.")
     else:
         st.info("Please upload a resume and paste a Job Description in the 'ATS Analysis' tab to use this feature.")
+
+# --- TAB 4: C-SUITE NARRATIVE GENERATOR ---
+with tab4:
+    st.subheader("👔 C-Suite Narrative Generator")
+    st.markdown("Generate three distinct Executive Summaries tailored to different leadership archetypes based on your resume and the target JD.")
+    
+    if uploaded_file and job_description:
+        # Re-extract text if not already done
+        if 'resume_text' not in locals():
+            def get_text(file):
+                if file.type == "application/pdf":
+                    reader = PyPDF2.PdfReader(file)
+                    return "".join([page.extract_text() for page in reader.pages])
+                else:
+                    doc = docx.Document(file)
+                    return "\n".join([p.text for p in doc.paragraphs])
+            resume_text = get_text(uploaded_file)
+
+        # Detect Metrics from Resume
+        metrics = {
+            "savings": "$10M+" if "$10M" in resume_text else "significant cost savings",
+            "portfolio": "$20M+" if "$20M" in resume_text else "multi-million dollar portfolios",
+            "team": "120+" if "120" in resume_text else "large-scale global teams",
+            "revenue": "12%" if "12%" in resume_text else "double-digit revenue growth"
+        }
+
+        st.markdown("---")
+        
+        # 1. The Transformer Narrative
+        st.markdown("### 🏗️ Archetype 1: The Transformer")
+        st.markdown("*Best for: Roles focused on Modernization, Legacy Migration, and Efficiency (e.g., InfoSend, Castelion)*")
+        transformer_narrative = (
+            f"Transformational technology executive with 30+ years of experience leading enterprise IT strategy and cloud modernization. "
+            f"Proven track record of managing **{metrics['portfolio']}** technology portfolios and directing **{metrics['team']}** person teams. "
+            f"Expert in translating complex technical roadmaps into measurable board-level outcomes, including delivering **{metrics['savings']}** in cost savings and driving **{metrics['revenue']}** revenue cycle improvements. "
+            f"Specializes in legacy-to-cloud migrations, DevSecOps automation, and embedding cybersecurity (SOC 2, NIST) into high-speed delivery models."
+        )
+        st.info(transformer_narrative)
+        st.download_button("Download Transformer Narrative", transformer_narrative, file_name="transformer_summary.txt")
+
+        st.markdown("---")
+
+        # 2. The Guardian Narrative
+        st.markdown("### 🛡️ Archetype 2: The Guardian")
+        st.markdown("*Best for: Roles focused on Security, Compliance, and Risk (e.g., ICANN, Banking, Healthcare)*")
+        guardian_narrative = (
+            f"Strategic IT leader with deep expertise in Cybersecurity, Zero Trust Architecture, and Regulatory Compliance (HIPAA, PCI-DSS, SOC 2, NIST). "
+            f"Successfully managed **{metrics['portfolio']}** in technology investments while maintaining rigorous audit readiness and reducing lateral movement risk. "
+            f"Trusted partner to Legal and Security teams, ensuring enterprise 'Big Swing' initiatives are governed by robust data privacy and model lifecycle management frameworks. "
+            f"Committed to protecting sensitive infrastructure while enabling secure, scalable business growth."
+        )
+        st.info(guardian_narrative)
+        st.download_button("Download Guardian Narrative", guardian_narrative, file_name="guardian_summary.txt")
+
+        st.markdown("---")
+
+        # 3. The Innovator Narrative
+        st.markdown("### 🚀 Archetype 3: The Innovator")
+        st.markdown("*Best for: Roles focused on AI Adoption, Revenue Growth, and Competitive Advantage (e.g., Acuity, Tech Startups)*")
+        innovator_narrative = (
+            f"Visionary C-suite executive specializing in Generative AI (GenAI), LLM adoption, and Data-Driven Innovation. "
+            f"Pioneered enterprise AI infrastructure (ELLA) and governed 'Big Swing' AI initiatives that delivered **{metrics['revenue']}** revenue lifts and **{metrics['savings']}** in operational efficiencies. "
+            f"Expert in bridging the gap between technical engineering teams and business stakeholders to deploy Agentic AI, RAG, and predictive modeling at scale. "
+            f"Focused on turning technology into a primary driver of EBITDA and market differentiation."
+        )
+        st.info(innovator_narrative)
+        st.download_button("Download Innovator Narrative", innovator_narrative, file_name="innovator_summary.txt")
+
+    else:
+        st.info("Please upload a resume and paste a Job Description in the 'ATS Analysis' tab to generate your C-Suite Narratives.")
 
 # Footer
 st.markdown("---")
