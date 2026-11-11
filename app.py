@@ -264,10 +264,31 @@ with tab1:
             jd_word_counts = Counter(clean(job_description))
             prioritized_missing = sorted(meaningful_missing, key=lambda x: jd_word_counts[x], reverse=True)
             
+            # --- TRANSFERABLE SKILLS BRIDGE ---
+            transferable_map = {
+                "Defense & Aerospace": {
+                    "soc 2": "Critical for Defense Compliance (CMMC/NIST)",
+                    "nist": "Directly maps to Defense Security Frameworks",
+                    "zero trust": "Highly valued in Secure Defense Networks",
+                    "hipaa": "Demonstrates experience with Strict Regulatory Controls",
+                    "pci-dss": "Shows ability to handle Sensitive Data Protection"
+                },
+                "Banking & Financial Services": {
+                    "hipaa": "Maps to Patient Data Privacy (similar to Financial Privacy)",
+                    "soc 2": "Essential for Financial Audit Readiness",
+                    "revenue cycle": "Directly translates to Banking Revenue Operations",
+                    "fraud": "Critical for Banking Security and Risk Management"
+                }
+            }
+
+            # --- DISPLAY RESULTS ---
+            
+            # 1. Match Score & Rejection Probability
             col_a, col_b = st.columns(2)
             with col_a:
                 st.metric("Keyword Match Score", f"{match_score:.1f}%")
                 st.progress(match_score / 100)
+            
             with col_b:
                 rejection_prob = max(0, min(95, 100 - match_score - 10)) 
                 st.metric("Est. Rejection Risk", f"{rejection_prob:.1f}%")
@@ -276,12 +297,76 @@ with tab1:
                 else: st.success("✅ Low Risk")
 
             st.markdown("---")
+
+            # 2. Found Keywords
+            st.subheader("✅ Found Keywords")
+            if common:
+                st.write(", ".join(sorted(list(common))[:20]))
+            else:
+                st.warning("No matching keywords found.")
+            
+            # 3. Missing Keywords
             st.subheader(f"⚠️ Top Missing Keywords ({industry})")
             if prioritized_missing:
                 st.write(", ".join(prioritized_missing[:15]))
                 st.info(f"Total meaningful missing: {len(meaningful_missing)}. Focus on the top ones!")
             else:
                 st.success("Great! All meaningful JD keywords are present!")
+            
+            # 4. Transferable Skills Bridge
+            if industry in transferable_map:
+                st.markdown("---")
+                st.subheader("🌉 Transferable Skills Bridge")
+                st.markdown("You're pivoting industries! Here’s how your current skills map to this role:")
+                bridge_found = False
+                for skill, mapping in transferable_map[industry].items():
+                    if skill in resume_text.lower():
+                        st.markdown(f"- ✅ **{skill.upper()}** $\to$ {mapping}")
+                        bridge_found = True
+                if not bridge_found:
+                    st.info("No direct transferable skills detected for this industry pivot.")
+
+            # 5. STRATEGIC RESUME PIVOT
+            st.markdown("---")
+            st.subheader("🚀 Strategic Resume Pivot")
+            st.markdown(f"**Target:** {industry}")
+            
+            # Identify top 5 missing keywords that are highly weighted
+            pivot_keywords = prioritized_missing[:5] if prioritized_missing else []
+            
+            if pivot_keywords:
+                st.markdown("To improve your fit, consider adding these high-value terms to your resume:")
+                for kw in pivot_keywords:
+                    # Find context in JD
+                    jd_lines = job_description.lower().split('\n')
+                    context_lines = [line.strip() for line in jd_lines if kw in line and len(line) > 10]
+                    context = context_lines[0] if context_lines else "Key requirement"
+                    st.markdown(f"- 🔹 **{kw.title()}**: *\"...{context[:80]}...\"*")
+            else:
+                st.success("Your resume already contains the top strategic keywords for this role!")
+
+            # 6. IMPROVEMENTS SECTION
+            st.markdown("---")
+            st.subheader("💡 How to Improve Your Resume")
+            improvements = []
+            
+            if match_score < 50:
+                improvements.append("🔴 **Critical:** Your keyword match is low. Try to naturally incorporate more terms from the Job Description.")
+            
+            if len(meaningful_missing) > 15:
+                improvements.append("🟡 **Volume:** You are missing over 15 meaningful keywords. Review the list above.")
+            
+            if len(resume_text.split()) < 300:
+                improvements.append("🟡 **Length:** Your resume seems quite short. Consider adding more detail about your achievements.")
+            
+            if match_score >= 80:
+                improvements.append("🟢 **Strong Match:** Your resume is well-optimized! Just double-check for any specific certifications.")
+                
+            if not improvements:
+                improvements.append("✅ **Good Start:** Continue refining your bullet points to focus on results and metrics.")
+
+            for imp in improvements:
+                st.markdown(f"- {imp}")
 
         elif not uploaded_file or not job_description:
             st.info("Please upload a resume and paste a Job Description to start.")
@@ -514,5 +599,3 @@ with tab5:
         st.info("Please upload a resume and paste a Job Description in Tab 1 to use this feature.")
 
 # Footer
-st.markdown("---")
-st.markdown("<div style='text-align: center; color: #6b7280;'>Built with ❤️ using Streamlit | <a href='https://github.com/alexnubla/Resume-Analyzer' style='color: #3b82f6;'>View on GitHub</a></div>", unsafe_allow_html=True)
