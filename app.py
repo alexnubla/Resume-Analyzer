@@ -215,13 +215,13 @@ with tab1:
             missing = jd_tokens - res_tokens
             match_score = (len(common) / len(jd_tokens)) * 100 if jd_tokens else 0
             
-            # --- DYNAMIC FILTERING LOGIC ---
+            # --- DYNAMIC FILTERING LOGIC (ENHANCED WITH REAL JD DATA) ---
             industry_noise = {
-                "Banking & Financial Services": {'banc', 'california', 'banks', 'credit', 'deposits', 'treasury', 'fraud', 'bsa', 'aml'},
-                "Healthcare & Life Sciences": {'hipaa', 'emr', 'ehr', 'patient', 'clinical', 'claims', 'revenue', 'cycle'},
-                "Technology & AI": {'llm', 'rag', 'agentic', 'genai', 'mlops', 'devops', 'saas', 'api'},
+                "Banking & Financial Services": {'banc', 'california', 'banks', 'credit', 'deposits', 'treasury', 'fraud', 'bsa', 'aml', 'model risk', 'itgc', 'agentic systems', 'recurring decisions'},
+                "Healthcare & Life Sciences": {'hipaa', 'emr', 'ehr', 'patient', 'clinical', 'claims', 'revenue', 'cycle', 'hedis', 'cahps', 'ncqa', 'ppm', 'shared services', 'iehp', 'kaiser'},
+                "Technology & AI": {'llm', 'rag', 'agentic', 'genai', 'mlops', 'devops', 'saas', 'api', 'ella', 'qwen', 'claude'},
                 "Defense & Aerospace": {'castelion', 'hypersonic', 'defense', 'itar', 'ear', 'clearance', 'government'},
-                "Entertainment & Media": {'streaming', 'content', 'media', 'entertainment', 'studio', 'production', 'broadcast', 'subscription', 'viewer', 'audience', 'netflix', 'disney', 'warner'},
+                "Entertainment & Media": {'streaming', 'content', 'media', 'entertainment', 'studio', 'production', 'broadcast', 'subscription', 'viewer', 'audience', 'netflix', 'disney', 'warner', 'umg', 'isrc', 'iswc', 'royalties', 'dsp', 'fan data', 'rights management'},
                 "Consulting & Professional Services": {'consulting', 'client', 'engagement', 'deliverable', 'billable', 'practice', 'partner', 'manager', 'associate', 'firm', 'mckinsey', 'deloitte', 'accenture'}
             }
             current_industry_noise = industry_noise.get(industry, set())
@@ -292,7 +292,7 @@ with tab1:
             avg_len = sum(len(s.split()) for s in sentences) / max(len(sentences), 1)
             readability_score = max(0, 100 - (avg_len - 15) * 2) # Penalize very long sentences
 
-            # --- TRANSFERABLE SKILLS BRIDGE ---
+            # --- TRANSFERABLE SKILLS BRIDGE (ENHANCED WITH REAL JD DATA) ---
             transferable_map = {
                 "Defense & Aerospace": {
                     "soc 2": "Critical for Defense Compliance (CMMC/NIST)",
@@ -303,9 +303,23 @@ with tab1:
                 },
                 "Banking & Financial Services": {
                     "hipaa": "Maps to Patient Data Privacy (similar to Financial Privacy)",
-                    "soc 2": "Essential for Financial Audit Readiness",
+                    "soc 2": "Essential for Financial Audit Readiness (ITGC)",
+                    "nist": "Aligns with Model Risk Management frameworks",
                     "revenue cycle": "Directly translates to Banking Revenue Operations",
-                    "fraud": "Critical for Banking Security and Risk Management"
+                    "fraud": "Critical for Banking Security and Risk Management",
+                    "agentic ai": "Matches 'Agentic Systems' requirement in JD"
+                },
+                "Entertainment & Media": {
+                    "data governance": "Critical for Rights & Royalty Management",
+                    "ai governance": "Maps to Responsible AI & Privacy by Design",
+                    "cloud transformation": "Enables scalable DSP & Fan Data platforms",
+                    "zero trust": "Protects intellectual property and artist data"
+                },
+                "Healthcare & Life Sciences": {
+                    "emr": "Direct experience with Epic/Focus systems",
+                    "revenue cycle": "Matches Health Plan Operations & Claims processing",
+                    "hipaa": "Essential for Patient Data Privacy",
+                    "analytics": "Supports HEDIS/CAHPS quality reporting"
                 }
             }
 
@@ -475,7 +489,7 @@ with tab2:
                     sections.append(sec.title())
             
             # 6. Skills Recognized
-            skill_keywords = ['python', 'aws', 'azure', 'sql', 'leadership', 'agile', 'docker', 'kubernetes', 'ai', 'llm', 'soc 2', 'hipaa', 'cloudflare', 'okta', 'generative ai']
+            skill_keywords = ['python', 'aws', 'azure', 'sql', 'leadership', 'agile', 'docker', 'kubernetes', 'ai', 'llm', 'soc 2', 'hipaa', 'cloudflare', 'okta', 'generative ai', 'rag', 'agentic', 'nist', 'zero trust']
             found_skills = [s for s in skill_keywords if s in raw_text.lower()]
             
             # 7. LinkedIn
@@ -500,10 +514,11 @@ with tab2:
             
             # 12. Industry Match
             industry_terms = {
-                "Healthcare": ['hipaa', 'emr', 'ehr', 'patient', 'clinic', 'kaiser', 'acuity'],
-                "Finance": ['bank', 'credit', 'fraud', 'pci-dss', 'sox', 'infosend'],
-                "Tech": ['saas', 'cloud', 'api', 'devops', 'llm', 'icann'],
-                "Defense": ['clearance', 'itar', 'defense', 'government']
+                "Healthcare": ['hipaa', 'emr', 'ehr', 'patient', 'clinic', 'kaiser', 'acuity', 'hedis', 'cahps'],
+                "Finance": ['bank', 'credit', 'fraud', 'pci-dss', 'sox', 'infosend', 'bsa', 'aml'],
+                "Tech": ['saas', 'cloud', 'api', 'devops', 'llm', 'icann', 'rag', 'agentic'],
+                "Defense": ['clearance', 'itar', 'defense', 'government'],
+                "Entertainment": ['umg', 'music', 'rights', 'royalties', 'isrc', 'fan data']
             }
             detected_industries = [ind for ind, terms in industry_terms.items() if any(t in raw_text.lower() for t in terms)]
 
@@ -564,11 +579,11 @@ with tab3:
         
         # Re-run filtering logic
         industry_noise = {
-            "Banking & Financial Services": {'banc', 'california', 'banks', 'credit', 'deposits', 'treasury', 'fraud', 'bsa', 'aml'},
-            "Healthcare & Life Sciences": {'hipaa', 'emr', 'ehr', 'patient', 'clinical', 'claims', 'revenue', 'cycle'},
-            "Technology & AI": {'llm', 'rag', 'agentic', 'genai', 'mlops', 'devops', 'saas', 'api'},
+            "Banking & Financial Services": {'banc', 'california', 'banks', 'credit', 'deposits', 'treasury', 'fraud', 'bsa', 'aml', 'model risk', 'itgc', 'agentic systems', 'recurring decisions'},
+            "Healthcare & Life Sciences": {'hipaa', 'emr', 'ehr', 'patient', 'clinical', 'claims', 'revenue', 'cycle', 'hedis', 'cahps', 'ncqa', 'ppm', 'shared services', 'iehp', 'kaiser'},
+            "Technology & AI": {'llm', 'rag', 'agentic', 'genai', 'mlops', 'devops', 'saas', 'api', 'ella', 'qwen', 'claude'},
             "Defense & Aerospace": {'castelion', 'hypersonic', 'defense', 'itar', 'ear', 'clearance', 'government'},
-            "Entertainment & Media": {'streaming', 'content', 'media', 'entertainment', 'studio', 'production', 'broadcast', 'subscription', 'viewer', 'audience', 'netflix', 'disney', 'warner'},
+            "Entertainment & Media": {'streaming', 'content', 'media', 'entertainment', 'studio', 'production', 'broadcast', 'subscription', 'viewer', 'audience', 'netflix', 'disney', 'warner', 'umg', 'isrc', 'iswc', 'royalties', 'dsp', 'fan data', 'rights management'},
             "Consulting & Professional Services": {'consulting', 'client', 'engagement', 'deliverable', 'billable', 'practice', 'partner', 'manager', 'associate', 'firm', 'mckinsey', 'deloitte', 'accenture'}
         }
         current_industry_noise = industry_noise.get(industry, set())
@@ -750,17 +765,20 @@ with tab4:
         
         # Dynamic Narrative Generation based on Industry
         if industry == "Healthcare & Life Sciences":
-            focus_area = "HIPAA compliance, EMR/EHR optimization, and patient-centric AI innovation."
-            key_tech = "FOCUS EMR, Epic Tapestry, and Conversational AI."
+            focus_area = "HIPAA compliance, EMR/EHR optimization, HEDIS/CAHPS quality metrics, and patient-centric AI innovation."
+            key_tech = "FOCUS EMR, Epic Tapestry, Conversational AI, and Revenue Cycle Automation."
         elif industry == "Defense & Aerospace":
-            focus_area = "NIST compliance, Zero Trust security, and secure AI governance for critical infrastructure."
-            key_tech = "SOC 2, NIST SP 800-53, and Governed LLM frameworks."
+            focus_area = "NIST compliance, Zero Trust security, ITAR regulations, and secure AI governance for critical infrastructure."
+            key_tech = "SOC 2, NIST SP 800-53, Governed LLM frameworks, and Secure Cloud Architecture."
         elif industry == "Banking & Financial Services":
-            focus_area = "PCI-DSS compliance, fraud prevention, and secure financial data architecture."
-            key_tech = "SOX compliance, Zero Trust, and automated revenue cycle operations."
+            focus_area = "PCI-DSS/SOX compliance, Model Risk Management (MRM), ITGC, fraud prevention, and secure financial data architecture."
+            key_tech = "Agentic AI, Zero Trust, Automated Revenue Cycle, and BSA/AML Compliance Frameworks."
+        elif industry == "Entertainment & Media":
+            focus_area = "Data Governance for Rights & Royalties, Fan Data monetization, DSP integration, and Responsible AI."
+            key_tech = "ISRC/ISWC Standards, AI-Ready Data Foundations, Privacy by Design, and Global Licensing Platforms."
         elif industry == "Technology & AI":
-            focus_area = "GenAI adoption, MLOps, and scalable cloud-native infrastructure."
-            key_tech = "ELLA AI Infrastructure, RAG, and Dual-LLM frameworks."
+            focus_area = "GenAI adoption, MLOps, RAG architectures, and scalable cloud-native infrastructure."
+            key_tech = "ELLA AI Infrastructure, Dual-LLM Frameworks (Claude/QWEN), and DevSecOps Automation."
         else:
             focus_area = "enterprise IT strategy, cloud modernization, and data-driven innovation."
             key_tech = "AWS/Azure/GCP, DevSecOps, and AI/LLM adoption."
@@ -859,7 +877,9 @@ with tab5:
                 "Okta", "Cloudflare", "Kubernetes", "Docker", "CI/CD", "EMR", "EHR", 
                 "Revenue Cycle", "Voice AI", "Conversational AI", "Agentic AI", "RAG",
                 "Google Cloud", "BigQuery", "FOCUS", "ASC", "Optical", "Claims", "EBITDA",
-                "Center of Excellence", "CoE", "Dashboards", "IVR", "Patient Satisfaction"
+                "Center of Excellence", "CoE", "Dashboards", "IVR", "Patient Satisfaction",
+                "HEDIS", "CAHPS", "NCQA", "PPM", "Shared Services", "Model Risk", "ITGC",
+                "ISRC", "ISWC", "Royalties", "DSP", "Fan Data", "Rights Management"
             ]
             
             found_terms = [term for term in high_value_terms if term.lower() in experience_block.lower()]
