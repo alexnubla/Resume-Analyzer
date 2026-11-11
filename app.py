@@ -19,74 +19,82 @@ except LookupError:
 # --- MODERN UI CONFIGURATION (StrideGPT Style) ---
 st.set_page_config(page_title="Resume ATS Evaluator", page_icon="📄", layout="wide")
 
-# Custom CSS for a Clean, Professional, Card-Based Look
+# Custom CSS for a Clean, Professional, SaaS-like Look
 st.markdown("""
 <style>
     /* Main Background - Clean Light Theme */
     .stApp {
-        background-color: #f8f9fa;
+        background-color: #ffffff;
         color: #1a202c;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
-    /* Headers - Bold and Dark */
+    /* Headers - Sharp and Professional */
     h1, h2, h3 {
         color: #1a202c !important;
         font-weight: 700;
-        letter-spacing: -0.5px;
+        letter-spacing: -0.02em;
     }
     
-    /* Sidebar - Clean White with Subtle Border */
-    section[data-testid="stSidebar"] {
-        background-color: #ffffff;
-        border-right: 1px solid #e2e8f0;
+    h1 {
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 15px;
+        margin-bottom: 25px;
     }
-    section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2, section[data-testid="stSidebar"] h3 {
-        color: #1a202c !important;
-    }
-    
-    /* Metric Cards - White with Shadow (The "Card" Look) */
+
+    /* Metrics Cards - Minimalist with Subtle Shadow */
     [data-testid="metric-container"] {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        transition: transform 0.2s;
-    }
-    [data-testid="metric-container"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
     
-    /* Buttons - Primary Brand Color (Deep Blue/Purple) */
+    /* Buttons - Primary Blue with Hover Effect */
     .stButton > button {
-        background-color: #4f46e5; /* Indigo-600 */
+        background-color: #2563eb; /* Professional Blue */
         color: white;
         border: none;
-        border-radius: 8px;
+        border-radius: 6px;
         font-weight: 600;
         padding: 0.5rem 1rem;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-        transition: all 0.2s ease-in-out;
+        transition: all 0.2s ease;
     }
     .stButton > button:hover {
-        background-color: #4338ca; /* Indigo-700 */
+        background-color: #1d4ed8;
         transform: translateY(-1px);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
     }
     
-    /* Text Areas and Inputs - Clean White Fields */
+    /* Secondary Buttons (Reset/Download) */
+    .stButton > button[kind="secondary"] {
+        background-color: #f1f5f9;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+    }
+    .stButton > button[kind="secondary"]:hover {
+        background-color: #e2e8f0;
+        color: #1e293b;
+    }
+
+    /* Text Areas and Inputs - Clean Borders */
     .stTextInput > div > div > input, .stTextArea > div > div > textarea {
         background-color: #ffffff;
         color: #1a202c;
         border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        padding: 12px;
+        border-radius: 6px;
+        padding: 10px;
     }
     .stTextInput > div > div > input:focus, .stTextArea > div > div > textarea:focus {
-        border-color: #4f46e5;
-        box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        border-color: #2563eb;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    }
+    
+    /* Sidebar - Light Gray Distinction */
+    section[data-testid="stSidebar"] {
+        background-color: #f8fafc;
+        border-right: 1px solid #e2e8f0;
     }
     
     /* Tabs - Underlined Style */
@@ -98,33 +106,32 @@ st.markdown("""
         height: 50px;
         white-space: pre-wrap;
         background-color: transparent;
-        border-radius: 0px;
+        border-radius: 0;
         padding-top: 10px;
         padding-bottom: 10px;
         color: #64748b;
         font-weight: 500;
     }
     .stTabs [aria-selected="true"] {
-        background-color: transparent !important;
-        border-bottom: 3px solid #4f46e5;
-        color: #4f46e5 !important;
-        font-weight: 700;
+        border-bottom: 2px solid #2563eb;
+        color: #2563eb;
+        font-weight: 600;
     }
     
-    /* Info/Alert Boxes - Soft Backgrounds */
+    /* Info/Success/Error Boxes - Soft Colors */
     .stAlert {
-        background-color: #eff6ff; /* Blue-50 */
-        border: 1px solid #bfdbfe; /* Blue-200 */
-        color: #1e40af; /* Blue-800 */
-        border-radius: 8px;
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        border-radius: 6px;
     }
     
-    /* Download Buttons - Secondary Style */
+    /* Download Buttons */
     .stDownloadButton > button {
         background-color: #ffffff;
-        color: #4f46e5;
-        border: 1px solid #4f46e5;
-        border-radius: 8px;
+        color: #2563eb;
+        border: 1px solid #2563eb;
+        border-radius: 6px;
         font-weight: 600;
     }
     .stDownloadButton > button:hover {
