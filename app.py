@@ -374,28 +374,51 @@ with tab1:
             else:
                 st.success("Your resume already contains the top strategic keywords for this role!")
 
-            # 6. IMPROVEMENTS SECTION
+            # 6. RISK REDUCTION PLAN (REPLACES IMPROVEMENTS SECTION)
             st.markdown("---")
-            st.subheader("💡 How to Improve Your Resume")
-            improvements = []
+            st.subheader("📉 Risk Reduction Plan")
             
-            if match_score < 50:
-                improvements.append("🔴 **Critical:** Your keyword match is low. Try to naturally incorporate more terms from the Job Description.")
+            target_risk = max(0, rejection_prob * 0.66) # Aim to reduce risk by 1/3
             
-            if len(meaningful_missing) > 15:
-                improvements.append("🟡 **Volume:** You are missing over 15 meaningful keywords. Review the list above.")
-            
-            if len(resume_text.split()) < 300:
-                improvements.append("🟡 **Length:** Your resume seems quite short. Consider adding more detail about your achievements.")
-            
-            if match_score >= 80:
-                improvements.append("🟢 **Strong Match:** Your resume is well-optimized! Just double-check for any specific certifications.")
-                
-            if not improvements:
-                improvements.append("✅ **Good Start:** Continue refining your bullet points to focus on results and metrics.")
+            st.markdown(f"**Current Risk:** {rejection_prob:.1f}% | **Target Risk:** {target_risk:.1f}%")
+            st.markdown("Follow these 5 steps to significantly lower your rejection probability:")
 
-            for imp in improvements:
-                st.markdown(f"- {imp}")
+            recommendations = []
+            
+            # 1. Critical Keyword Gap (Highest Impact)
+            if prioritized_missing:
+                top_3 = ", ".join(prioritized_missing[:3])
+                recommendations.append(f"**1. Inject Top 3 Missing Keywords:** The ATS is filtering you out because it can't find **{top_3}**. Add these exact terms to your 'Skills' section and weave them into 2-3 bullet points in your most recent role.")
+            else:
+                recommendations.append("**1. Keyword Density Check:** Your keyword match is strong, but ensure you aren't 'keyword stuffing'. Keep density natural (2-3% of total text).")
+
+            # 2. Quantifiable Impact (High Impact)
+            if not re.search(r'\d+%', resume_text) and not re.search(r'\$[\d,]+M', resume_text):
+                recommendations.append("**2. Add Hard Metrics:** Your resume lacks quantified results ($ or %). ATS algorithms prioritize candidates who prove ROI. Add at least 3 metrics (e.g., 'Reduced costs by 15%' or 'Managed $10M budget').")
+            else:
+                recommendations.append("**2. Amplify Existing Metrics:** You have good metrics, but move them to the **first line** of your bullet points. Example: '**$10M Savings:** Led initiative...' instead of burying it at the end.")
+
+            # 3. Section Completeness (Medium Impact)
+            if completeness_score < 80:
+                missing_secs = [s for s in ['Summary', 'Skills', 'Education'] if s.lower() not in resume_text.lower()]
+                recommendations.append(f"**3. Complete Missing Sections:** The ATS cannot score you fully without a **{', '.join(missing_secs)}** section. Add these immediately to boost your Completeness Score.")
+            else:
+                recommendations.append("**3. Optimize Section Headers:** Ensure your headers are standard (e.g., use 'Professional Experience' instead of 'My Journey'). Standard headers help the ATS parse your timeline correctly.")
+
+            # 4. Seniority/Leadership Signal (Medium Impact)
+            if 'lead' not in resume_text.lower() and 'manage' not in resume_text.lower() and 'direct' not in resume_text.lower():
+                recommendations.append("**4. Strengthen Leadership Verbs:** For executive roles, the ATS looks for leadership signals. Replace passive verbs with active leadership terms like 'Directed,' 'Orchestrated,' or 'Spearheaded.'")
+            else:
+                recommendations.append("**4. Highlight Governance & Strategy:** For senior roles, ensure you mention 'Strategy,' 'Governance,' or 'Roadmap' in your summary. This signals executive-level thinking to the parser.")
+
+            # 5. Formatting/Parseability (Low but Critical Impact)
+            if formatting_score < 80:
+                recommendations.append("**5. Simplify Formatting:** Your Formatting Score is low. Remove complex tables, text boxes, or graphics from your header. Use a clean, single-column layout to ensure the ATS reads your contact info correctly.")
+            else:
+                recommendations.append("**5. Verify Contact Info Parsing:** Go to the 'ATS AI Parser' tab. If your Name or Email is missing from the raw text, move them out of headers/footers and into the main body text.")
+
+            for i, rec in enumerate(recommendations):
+                st.markdown(f"> {rec}")
 
         elif not uploaded_file or not job_description:
             st.info("Please upload a resume and paste a Job Description to start.")
