@@ -476,14 +476,14 @@ with tab3:
             st.success("Your resume is already well-aligned with the top keywords!")
             
         st.markdown("---")
-        st.info("💡 **Pro Tip:** Copy these suggestions and adapt them to your specific achievements at InfoSend, ICANN, or Acuity Eye Group.")
+        st.info("💡 **Pro Tip:** Copy these suggestions and adapt them to your specific achievements.")
     else:
         st.info("Please upload a resume and paste a Job Description in the 'ATS Analysis' tab to use this feature.")
 
 # --- TAB 4: C-SUITE NARRATIVE GENERATOR ---
 with tab4:
     st.subheader("👔 C-Suite Narrative Generator")
-    st.markdown("Generate three distinct Executive Summaries tailored to different leadership archetypes based on your resume and the target JD.")
+    st.markdown("Generate five distinct Executive Summaries tailored to different leadership archetypes. These are anonymized and focused on impact.")
     
     if uploaded_file and job_description:
         # Re-extract text if not already done
@@ -497,24 +497,25 @@ with tab4:
                     return "\n".join([p.text for p in doc.paragraphs])
             resume_text = get_text(uploaded_file)
 
-        # Detect Metrics from Resume
+        # Detect Metrics from Resume dynamically
         metrics = {
             "savings": "$10M+" if "$10M" in resume_text else "significant cost savings",
             "portfolio": "$20M+" if "$20M" in resume_text else "multi-million dollar portfolios",
             "team": "120+" if "120" in resume_text else "large-scale global teams",
-            "revenue": "12%" if "12%" in resume_text else "double-digit revenue growth"
+            "revenue": "12%" if "12%" in resume_text else "double-digit revenue growth",
+            "uptime": "99.99%" if "99.99" in resume_text else "high-availability standards"
         }
 
         st.markdown("---")
         
         # 1. The Transformer Narrative
         st.markdown("### 🏗️ Archetype 1: The Transformer")
-        st.markdown("*Best for: Roles focused on Modernization, Legacy Migration, and Efficiency (e.g., InfoSend, Castelion)*")
+        st.markdown("*Best for: Roles focused on Modernization, Legacy Migration, and Efficiency.*")
         transformer_narrative = (
-            f"Transformational technology executive with 30+ years of experience leading enterprise IT strategy and cloud modernization. "
+            f"Transformational technology executive with extensive experience leading enterprise IT strategy and cloud modernization. "
             f"Proven track record of managing **{metrics['portfolio']}** technology portfolios and directing **{metrics['team']}** person teams. "
             f"Expert in translating complex technical roadmaps into measurable board-level outcomes, including delivering **{metrics['savings']}** in cost savings and driving **{metrics['revenue']}** revenue cycle improvements. "
-            f"Specializes in legacy-to-cloud migrations, DevSecOps automation, and embedding cybersecurity (SOC 2, NIST) into high-speed delivery models."
+            f"Specializes in legacy-to-cloud migrations, DevSecOps automation, and embedding cybersecurity into high-speed delivery models."
         )
         st.info(transformer_narrative)
         st.download_button("Download Transformer Narrative", transformer_narrative, file_name="transformer_summary.txt")
@@ -523,11 +524,11 @@ with tab4:
 
         # 2. The Guardian Narrative
         st.markdown("### 🛡️ Archetype 2: The Guardian")
-        st.markdown("*Best for: Roles focused on Security, Compliance, and Risk (e.g., ICANN, Banking, Healthcare)*")
+        st.markdown("*Best for: Roles focused on Security, Compliance, and Risk.*")
         guardian_narrative = (
-            f"Strategic IT leader with deep expertise in Cybersecurity, Zero Trust Architecture, and Regulatory Compliance (HIPAA, PCI-DSS, SOC 2, NIST). "
+            f"Strategic IT leader with deep expertise in Cybersecurity, Zero Trust Architecture, and Regulatory Compliance. "
             f"Successfully managed **{metrics['portfolio']}** in technology investments while maintaining rigorous audit readiness and reducing lateral movement risk. "
-            f"Trusted partner to Legal and Security teams, ensuring enterprise 'Big Swing' initiatives are governed by robust data privacy and model lifecycle management frameworks. "
+            f"Trusted partner to Legal and Security teams, ensuring enterprise initiatives are governed by robust data privacy and model lifecycle management frameworks. "
             f"Committed to protecting sensitive infrastructure while enabling secure, scalable business growth."
         )
         st.info(guardian_narrative)
@@ -537,15 +538,43 @@ with tab4:
 
         # 3. The Innovator Narrative
         st.markdown("### 🚀 Archetype 3: The Innovator")
-        st.markdown("*Best for: Roles focused on AI Adoption, Revenue Growth, and Competitive Advantage (e.g., Acuity, Tech Startups)*")
+        st.markdown("*Best for: Roles focused on AI Adoption, Revenue Growth, and Competitive Advantage.*")
         innovator_narrative = (
             f"Visionary C-suite executive specializing in Generative AI (GenAI), LLM adoption, and Data-Driven Innovation. "
-            f"Pioneered enterprise AI infrastructure (ELLA) and governed 'Big Swing' AI initiatives that delivered **{metrics['revenue']}** revenue lifts and **{metrics['savings']}** in operational efficiencies. "
+            f"Pioneered enterprise AI infrastructure and governed 'Big Swing' AI initiatives that delivered **{metrics['revenue']}** revenue lifts and **{metrics['savings']}** in operational efficiencies. "
             f"Expert in bridging the gap between technical engineering teams and business stakeholders to deploy Agentic AI, RAG, and predictive modeling at scale. "
             f"Focused on turning technology into a primary driver of EBITDA and market differentiation."
         )
         st.info(innovator_narrative)
         st.download_button("Download Innovator Narrative", innovator_narrative, file_name="innovator_summary.txt")
+
+        st.markdown("---")
+
+        # 4. The Operator Narrative (NEW)
+        st.markdown("### ⚙️ Archetype 4: The Operator")
+        st.markdown("*Best for: Roles focused on Stability, Uptime, and Cost-Efficiency (e.g., Banking, Utilities).*")
+        operator_narrative = (
+            f"Results-oriented IT executive with a relentless focus on operational excellence and service reliability. "
+            f"Managed **{metrics['portfolio']}** budgets while achieving **{metrics['uptime']}** availability across global hybrid-cloud environments. "
+            f"Expert in rationalizing technology portfolios, negotiating enterprise vendor contracts, and implementing ITIL-based service management frameworks. "
+            f"Proven ability to stabilize complex infrastructures and deliver consistent, predictable value to the business."
+        )
+        st.info(operator_narrative)
+        st.download_button("Download Operator Narrative", operator_narrative, file_name="operator_summary.txt")
+
+        st.markdown("---")
+
+        # 5. The Product-Minded Leader Narrative (NEW)
+        st.markdown("### 💡 Archetype 5: The Product-Minded Leader")
+        st.markdown("*Best for: SaaS, Tech Startups, and Digital-First Organizations.*")
+        product_narrative = (
+            f"Forward-thinking technology leader who treats IT as a product and users as customers. "
+            f"Led the development of internal platforms and conversational AI tools that improved user satisfaction and reduced support volume by millions of interactions annually. "
+            f"Expert in Agile/SAFe methodologies, rapid prototyping, and data-driven decision-making. "
+            f"Focused on building high-performing engineering cultures that prioritize speed, quality, and user-centric innovation."
+        )
+        st.info(product_narrative)
+        st.download_button("Download Product-Minded Narrative", product_narrative, file_name="product_summary.txt")
 
     else:
         st.info("Please upload a resume and paste a Job Description in the 'ATS Analysis' tab to generate your C-Suite Narratives.")
