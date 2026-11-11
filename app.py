@@ -157,18 +157,10 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 ATS Analysis", "🤖 ATS AI Parser
 with st.sidebar:
     st.header("⚙️ Configuration")
     st.markdown("""
-    1. **Select Target Industry**
-    2. **Upload Resume**
-    3. **Paste Job Description**
+    1. **Upload Resume**
+    2. **Paste Job Description**
+    3. **Select Target Industry**
     """)
-    
-    # --- INDUSTRY SELECTOR ---
-    industry = st.selectbox(
-        "🎯 Target Industry",
-        ["General / All Industries", "Banking & Financial Services", "Healthcare & Life Sciences", 
-         "Technology & AI", "Defense & Aerospace", "Retail & E-commerce", 
-         "Entertainment & Media", "Consulting & Professional Services"]
-    )
     
     st.markdown("---")
     st.caption("Built for modern executives pivoting industries.")
@@ -181,8 +173,20 @@ with tab1:
         st.subheader("📤 Upload Resume")
         uploaded_file = st.file_uploader("Choose your resume file", type=['pdf', 'docx'], key="analysis_upload")
         
+        # --- REORDERED INPUTS ---
         st.subheader("💼 Job Description")
-        job_description = st.text_area("Paste the job description here, then select 🎯 Target Industry on the left:", height=300, placeholder="Enter the full job description...", key="jd_input")
+        
+        # Moved Industry Selector here
+        industry = st.selectbox(
+            "🎯 Target Industry",
+            ["General / All Industries", "Banking & Financial Services", "Healthcare & Life Sciences", 
+             "Technology & AI", "Defense & Aerospace", "Retail & E-commerce", 
+             "Entertainment & Media", "Consulting & Professional Services"],
+            key="tab1_industry"
+        )
+        
+        st.markdown("_Paste the job description here, then select 🎯 Target Industry above:_")
+        job_description = st.text_area("", height=300, placeholder="Enter the full job description...", key="jd_input", label_visibility="collapsed")
         
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
