@@ -16,80 +16,119 @@ try:
 except LookupError:
     nltk.download('stopwords', quiet=True)
 
-# --- MODERN UI CONFIGURATION ---
+# --- MODERN UI CONFIGURATION (StrideGPT Style) ---
 st.set_page_config(page_title="Resume ATS Evaluator", page_icon="📄", layout="wide")
 
-# Custom CSS for a Striking, Modern Look
+# Custom CSS for a Clean, Professional, Card-Based Look
 st.markdown("""
 <style>
-    /* Main Background and Font */
+    /* Main Background - Clean Light Theme */
     .stApp {
-        background-color: #0e1117;
-        color: #fafafa;
+        background-color: #f8f9fa;
+        color: #1a202c;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
-    /* Headers */
+    /* Headers - Bold and Dark */
     h1, h2, h3 {
-        color: #ffffff !important;
-        font-family: 'Inter', sans-serif;
-        font-weight: 600;
+        color: #1a202c !important;
+        font-weight: 700;
+        letter-spacing: -0.5px;
     }
     
-    /* Metrics Cards */
+    /* Sidebar - Clean White with Subtle Border */
+    section[data-testid="stSidebar"] {
+        background-color: #ffffff;
+        border-right: 1px solid #e2e8f0;
+    }
+    section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2, section[data-testid="stSidebar"] h3 {
+        color: #1a202c !important;
+    }
+    
+    /* Metric Cards - White with Shadow (The "Card" Look) */
     [data-testid="metric-container"] {
-        background-color: #1f2937;
-        border: 1px solid #374151;
-        padding: 15px;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: transform 0.2s;
+    }
+    [data-testid="metric-container"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     }
     
-    /* Buttons */
+    /* Buttons - Primary Brand Color (Deep Blue/Purple) */
     .stButton > button {
-        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        background-color: #4f46e5; /* Indigo-600 */
         color: white;
         border: none;
         border-radius: 8px;
         font-weight: 600;
-        transition: all 0.3s ease;
+        padding: 0.5rem 1rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease-in-out;
     }
     .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
+        background-color: #4338ca; /* Indigo-700 */
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
     
-    /* Text Areas and Inputs */
+    /* Text Areas and Inputs - Clean White Fields */
     .stTextInput > div > div > input, .stTextArea > div > div > textarea {
-        background-color: #1f2937;
-        color: #ffffff;
-        border: 1px solid #374151;
+        background-color: #ffffff;
+        color: #1a202c;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 12px;
+    }
+    .stTextInput > div > div > input:focus, .stTextArea > div > div > textarea:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
     }
     
-    /* Sidebar */
-    section[data-testid="stSidebar"] {
-        background-color: #111827;
-        border-right: 1px solid #374151;
-    }
-    
-    /* Tabs */
+    /* Tabs - Underlined Style */
     .stTabs [data-baseweb="tab-list"] {
         gap: 24px;
+        border-bottom: 1px solid #e2e8f0;
     }
     .stTabs [data-baseweb="tab"] {
         height: 50px;
         white-space: pre-wrap;
-        background-color: #1f2937;
-        border-radius: 4px 4px 0px 0px;
-        gap: 1px;
+        background-color: transparent;
+        border-radius: 0px;
         padding-top: 10px;
         padding-bottom: 10px;
+        color: #64748b;
+        font-weight: 500;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: transparent !important;
+        border-bottom: 3px solid #4f46e5;
+        color: #4f46e5 !important;
+        font-weight: 700;
     }
     
-    /* Info Boxes */
+    /* Info/Alert Boxes - Soft Backgrounds */
     .stAlert {
-        background-color: #1f2937;
-        border: 1px solid #3b82f6;
-        color: #ffffff;
+        background-color: #eff6ff; /* Blue-50 */
+        border: 1px solid #bfdbfe; /* Blue-200 */
+        color: #1e40af; /* Blue-800 */
+        border-radius: 8px;
+    }
+    
+    /* Download Buttons - Secondary Style */
+    .stDownloadButton > button {
+        background-color: #ffffff;
+        color: #4f46e5;
+        border: 1px solid #4f46e5;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    .stDownloadButton > button:hover {
+        background-color: #eff6ff;
     }
 </style>
 """, unsafe_allow_html=True)
