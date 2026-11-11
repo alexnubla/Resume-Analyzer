@@ -21,7 +21,7 @@ st.set_page_config(page_title="Resume ATS Evaluator", page_icon="📄", layout="
 st.title("📄 Resume ATS Evaluator")
 
 # Tabs for different features
-tab1, tab2 = st.tabs(["📊 ATS Analysis", "🤖 ATS Parseability Check"])
+tab1, tab2, tab3 = st.tabs(["📊 ATS Analysis", "🤖 ATS Parseability Check", "📝 AI Resume Rewriter"])
 
 with st.sidebar:
     st.header("Instructions")
@@ -325,7 +325,7 @@ with tab1:
                 if not bridge_found:
                     st.info("No direct transferable skills detected for this industry pivot.")
 
-            # 5. STRATEGIC RESUME PIVOT (NEW FEATURE)
+            # 5. STRATEGIC RESUME PIVOT
             st.markdown("---")
             st.subheader("🚀 Strategic Resume Pivot")
             st.markdown(f"**Target:** {industry}")
@@ -425,6 +425,60 @@ with tab2:
             st.code(raw_text[:1000] + "...", language="text") # Show first 1000 chars
             
             st.info("💡 **Tip:** If your name or contact info is missing from the text above, move it out of headers/footers or tables.")
+
+# --- TAB 3: AI RESUME REWRITER ---
+with tab3:
+    st.subheader("📝 AI-Powered Resume Rewriter")
+    st.markdown("This tool suggests how to rewrite your existing bullet points to include high-value keywords from the Job Description.")
+    
+    if uploaded_file and job_description:
+        # Re-extract text if not already done in Tab 1
+        if 'resume_text' not in locals():
+            def get_text(file):
+                if file.type == "application/pdf":
+                    reader = PyPDF2.PdfReader(file)
+                    return "".join([page.extract_text() for page in reader.pages])
+                else:
+                    doc = docx.Document(file)
+                    return "\n".join([p.text for p in doc.paragraphs])
+            resume_text = get_text(uploaded_file)
+
+        st.markdown("---")
+        st.subheader("🎯 Suggested Bullet Point Improvements")
+        
+        # Identify top 3 missing keywords to focus on
+        top_missing = prioritized_missing[:3] if 'prioritized_missing' in locals() else []
+        
+        if top_missing:
+            st.markdown(f"Based on the **{industry}** job description, try rewriting your bullet points to include these terms:")
+            
+            for keyword in top_missing:
+                # Find a relevant sentence in the JD for context
+                jd_context = [line.strip() for line in jd_lines if keyword in line and len(line) > 20]
+                context_snippet = jd_context[0] if jd_context else f"Required expertise in {keyword}"
+                
+                st.markdown(f"**🔹 Keyword: {keyword.title()}**")
+                st.markdown(f"*JD Context:* \"{context_snippet[:100]}...\"")
+                
+                # Generate a template suggestion based on Alex's profile
+                if "security" in keyword or "compliance" in keyword or "nist" in keyword:
+                    suggestion = f"\"Led enterprise-wide **{keyword}** initiatives, aligning infrastructure with **NIST** frameworks and reducing regulatory risk by 40%.\""
+                elif "cloud" in keyword or "infrastructure" in keyword or "scale" in keyword:
+                    suggestion = f"\"Architected scalable **{keyword}** solutions across multi-site environments, improving operational efficiency and supporting rapid business growth.\""
+                elif "ai" in keyword or "data" in keyword or "automation" in keyword:
+                    suggestion = f"\"Spearheaded **{keyword}** adoption through governed AI frameworks, delivering measurable ROI and enhancing decision-making capabilities.\""
+                else:
+                    suggestion = f"\"Directed cross-functional teams to implement **{keyword}** best practices, resulting in improved system reliability and stakeholder satisfaction.\""
+                
+                st.markdown(f"*💡 **Suggested Rewrite:** {suggestion}*")
+                st.markdown("")
+        else:
+            st.success("Your resume is already well-aligned with the top keywords!")
+            
+        st.markdown("---")
+        st.info("💡 **Pro Tip:** Copy these suggestions and adapt them to your specific achievements at InfoSend, ICANN, or Acuity Eye Group.")
+    else:
+        st.info("Please upload a resume and paste a Job Description in the 'ATS Analysis' tab to use this feature.")
 
 # Footer
 st.markdown("---")
