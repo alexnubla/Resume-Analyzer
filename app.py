@@ -683,10 +683,10 @@ with tab3:
     else:
         st.info("Please upload a resume and paste a Job Description in Tab 1 to use this feature.")
 
-# --- TAB 4: C-SUITE NARRATIVE ---
+# --- TAB 4: C-SUITE NARRATIVE (INDUSTRY-SPECIFIC) ---
 with tab4:
     st.subheader("👔 C-Suite Narrative Generator")
-    st.markdown("Generate five distinct Executive Summaries tailored to different leadership archetypes.")
+    st.markdown("Generate five distinct Executive Summaries tailored to different leadership archetypes and your selected industry.")
     
     if uploaded_file and job_description:
         if 'resume_text' not in locals():
@@ -702,61 +702,78 @@ with tab4:
 
         st.markdown("---")
         
+        # Dynamic Narrative Generation based on Industry
+        if industry == "Healthcare & Life Sciences":
+            focus_area = "HIPAA compliance, EMR/EHR optimization, and patient-centric AI innovation."
+            key_tech = "FOCUS EMR, Epic Tapestry, and Conversational AI."
+        elif industry == "Defense & Aerospace":
+            focus_area = "NIST compliance, Zero Trust security, and secure AI governance for critical infrastructure."
+            key_tech = "SOC 2, NIST SP 800-53, and Governed LLM frameworks."
+        elif industry == "Banking & Financial Services":
+            focus_area = "PCI-DSS compliance, fraud prevention, and secure financial data architecture."
+            key_tech = "SOX compliance, Zero Trust, and automated revenue cycle operations."
+        elif industry == "Technology & AI":
+            focus_area = "GenAI adoption, MLOps, and scalable cloud-native infrastructure."
+            key_tech = "ELLA AI Infrastructure, RAG, and Dual-LLM frameworks."
+        else:
+            focus_area = "enterprise IT strategy, cloud modernization, and data-driven innovation."
+            key_tech = "AWS/Azure/GCP, DevSecOps, and AI/LLM adoption."
+
         st.markdown("### 🏗️ Archetype 1: The Transformer")
-        st.markdown("*Best for: Modernization, Legacy Migration, and Efficiency.*")
+        st.markdown(f"*Best for: Modernization, Legacy Migration, and Efficiency.*")
         transformer_narrative = (
-            f"Transformational technology executive with extensive experience leading enterprise IT strategy and cloud modernization. "
+            f"Transformational technology executive with extensive experience leading {focus_area} "
             f"Proven track record of managing **{metrics['portfolio']}** technology portfolios and directing **{metrics['team']}** person teams. "
             f"Expert in translating complex technical roadmaps into measurable board-level outcomes, including delivering **{metrics['savings']}** in cost savings and driving **{metrics['revenue']}** revenue cycle improvements. "
-            f"Specializes in legacy-to-cloud migrations, DevSecOps automation, and embedding cybersecurity into high-speed delivery models."
+            f"Specializes in legacy-to-cloud migrations, DevSecOps automation, and embedding cybersecurity into high-speed delivery models using **{key_tech}**."
         )
         st.info(transformer_narrative)
         st.download_button("Download Transformer Narrative", transformer_narrative, file_name="transformer_summary.txt")
 
         st.markdown("---")
         st.markdown("### 🛡️ Archetype 2: The Guardian")
-        st.markdown("*Best for: Security, Compliance, and Risk.*")
+        st.markdown(f"*Best for: Security, Compliance, and Risk.*")
         guardian_narrative = (
             f"Strategic IT leader with deep expertise in Cybersecurity, Zero Trust Architecture, and Regulatory Compliance. "
             f"Successfully managed **{metrics['portfolio']}** in technology investments while maintaining rigorous audit readiness and reducing lateral movement risk. "
             f"Trusted partner to Legal and Security teams, ensuring enterprise initiatives are governed by robust data privacy and model lifecycle management frameworks. "
-            f"Committed to protecting sensitive infrastructure while enabling secure, scalable business growth."
+            f"Committed to protecting sensitive infrastructure while enabling secure, scalable business growth through **{key_tech}**."
         )
         st.info(guardian_narrative)
         st.download_button("Download Guardian Narrative", guardian_narrative, file_name="guardian_summary.txt")
 
         st.markdown("---")
         st.markdown("### 🚀 Archetype 3: The Innovator")
-        st.markdown("*Best for: AI Adoption, Revenue Growth, and Competitive Advantage.*")
+        st.markdown(f"*Best for: AI Adoption, Revenue Growth, and Competitive Advantage.*")
         innovator_narrative = (
             f"Visionary C-suite executive specializing in Generative AI (GenAI), LLM adoption, and Data-Driven Innovation. "
             f"Pioneered enterprise AI infrastructure and governed 'Big Swing' AI initiatives that delivered **{metrics['revenue']}** revenue lifts and **{metrics['savings']}** in operational efficiencies. "
             f"Expert in bridging the gap between technical engineering teams and business stakeholders to deploy Agentic AI, RAG, and predictive modeling at scale. "
-            f"Focused on turning technology into a primary driver of EBITDA and market differentiation."
+            f"Focused on turning technology into a primary driver of EBITDA and market differentiation using **{key_tech}**."
         )
         st.info(innovator_narrative)
         st.download_button("Download Innovator Narrative", innovator_narrative, file_name="innovator_summary.txt")
 
         st.markdown("---")
         st.markdown("### ⚙️ Archetype 4: The Operator")
-        st.markdown("*Best for: Stability, Uptime, and Cost-Efficiency.*")
+        st.markdown(f"*Best for: Stability, Uptime, and Cost-Efficiency.*")
         operator_narrative = (
             f"Results-oriented IT executive with a relentless focus on operational excellence and service reliability. "
             f"Managed **{metrics['portfolio']}** budgets while achieving **{metrics['uptime']}** availability across global hybrid-cloud environments. "
             f"Expert in rationalizing technology portfolios, negotiating enterprise vendor contracts, and implementing ITIL-based service management frameworks. "
-            f"Proven ability to stabilize complex infrastructures and deliver consistent, predictable value to the business."
+            f"Proven ability to stabilize complex infrastructures and deliver consistent, predictable value to the business through **{key_tech}**."
         )
         st.info(operator_narrative)
         st.download_button("Download Operator Narrative", operator_narrative, file_name="operator_summary.txt")
 
         st.markdown("---")
         st.markdown("### 💡 Archetype 5: The Product-Minded Leader")
-        st.markdown("*Best for: SaaS, Tech Startups, and Digital-First Organizations.*")
+        st.markdown(f"*Best for: SaaS, Tech Startups, and Digital-First Organizations.*")
         product_narrative = (
             f"Forward-thinking technology leader who treats IT as a product and users as customers. "
             f"Led the development of internal platforms and conversational AI tools that improved user satisfaction and reduced support volume by millions of interactions annually. "
             f"Expert in Agile/SAFe methodologies, rapid prototyping, and data-driven decision-making. "
-            f"Focused on building high-performing engineering cultures that prioritize speed, quality, and user-centric innovation."
+            f"Focused on building high-performing engineering cultures that prioritize speed, quality, and user-centric innovation using **{key_tech}**."
         )
         st.info(product_narrative)
         st.download_button("Download Product-Minded Narrative", product_narrative, file_name="product_summary.txt")
