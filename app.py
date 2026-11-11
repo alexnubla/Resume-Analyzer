@@ -182,7 +182,7 @@ with tab1:
         uploaded_file = st.file_uploader("Choose your resume file", type=['pdf', 'docx'], key="analysis_upload")
         
         st.subheader("💼 Job Description")
-        job_description = st.text_area("Paste the job description here:", height=300, placeholder="Enter the full job description...", key="jd_input")
+        job_description = st.text_area("Paste the job description here, then select 🎯 Target Industry on the left:", height=300, placeholder="Enter the full job description...", key="jd_input")
         
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
