@@ -23,7 +23,11 @@ def get_text(file):
         return "".join([page.extract_text() for page in reader.pages])
     else:
         doc = docx.Document(file)
-        return "\n".join([p.text for p in doc.paragraphs])
+        # For DOCX, we join paragraphs but also check for list items to preserve structure
+        text_parts = []
+        for para in doc.paragraphs:
+            text_parts.append(para.text)
+        return "\n".join(text_parts)
 
 def clean(text):
     text = text.lower()
@@ -474,12 +478,16 @@ with tab2:
             linkedin_match = re.search(r'linkedin\.com/in/[a-zA-Z0-9_-]+', raw_text)
             linkedin = linkedin_match.group(0) if linkedin_match else "Not Detected"
             
-            # 7. Timeline (Replaces Date Format)
+            # 7. Timeline (Replaces Date Format) - Extracts Month + Year
             timeline_matches = re.findall(r'\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b', raw_text)
-            timeline = list(set(timeline_matches)) # Unique months/years found
+            timeline = list(set(timeline_matches)) # Unique Month/Year pairs
             
-            # 8. Bullet Points
+            # 8. Bullet Points (Enhanced for Word Docs)
+            # Count lines starting with common bullet chars or list styles
             bullet_count = len(re.findall(r'^\s*[\-\*\•]\s', raw_text, re.MULTILINE))
+            # Also check for python-docx list styles if available (simplified here by checking for numbered lists too)
+            numbered_list_count = len(re.findall(r'^\s*\d+\.\s', raw_text, re.MULTILINE))
+            total_bullets = bullet_count + numbered_list_count
             
             # 9. Quantified Impact ($ or %) - Deduplicated
             impacts_raw = re.findall(r'(\$[\d,]+M+|\d+%)', raw_text)
@@ -511,7 +519,7 @@ with tab2:
             st.markdown(f"**5. Skills Recognized:** {', '.join(found_skills) if found_skills else 'None'}")
             st.markdown(f"**6. LinkedIn:** `{linkedin}`")
             st.markdown(f"**7. Timeline:** {', '.join(timeline[:10]) if timeline else 'None'}")
-            st.markdown(f"**8. Bullet Points:** {bullet_count}")
+            st.markdown(f"**8. Bullet Points:** {total_bullets}")
             st.markdown(f"**9. Quantified Impact:** {', '.join(impacts) if impacts else 'None'}")
             st.markdown(f"**10. Word Count:** {word_count}")
             st.markdown(f"**11. Seniority Signal:** {seniority_signal}")
@@ -544,22 +552,114 @@ with tab3:
             resume_text = get_text(uploaded_file)
 
         st.markdown("---")
-        st.subheader("🎯 Suggested Bullet Point Improvements")
         
-        # Recalculate missing if needed
-        if 'prioritized_missing' not in locals():
-             res_tokens = set(clean(resume_text))
-             jd_tokens = set(clean(job_description))
-             missing = jd_tokens - res_tokens
-             jd_word_counts = Counter(clean(job_description))
-             # Simplified filter for this tab
-             prioritized_missing = sorted([w for w in missing if len(w)>3], key=lambda x: jd_word_counts[x], reverse=True)
+        # --- PART 1: RISK REDUCTION PLAN (FROM TAB 1) ---
+        st.subheader("📉 Risk Reduction Plan")
+        st.markdown("Apply these 5 critical fixes first to lower your rejection risk:")
+        
+        # Recalculate metrics for this tab
+        res_tokens = set(clean(resume_text))
+        jd_tokens = set(clean(job_description))
+        common = res_tokens.intersection(jd_tokens)
+        missing = jd_tokens - res_tokens
+        match_score = (len(common) / len(jd_tokens)) * 100 if jd_tokens else 0
+        rejection_prob = max(0, min(95, 100 - match_score - 10))
+        
+        # Re-run filtering logic
+        industry_noise = {
+            "Banking & Financial Services": {'banc', 'california', 'banks', 'credit', 'deposits', 'treasury', 'fraud', 'bsa', 'aml'},
+            "Healthcare & Life Sciences": {'hipaa', 'emr', 'ehr', 'patient', 'clinical', 'claims', 'revenue', 'cycle'},
+            "Technology & AI": {'llm', 'rag', 'agentic', 'genai', 'mlops', 'devops', 'saas', 'api'},
+            "Defense & Aerospace": {'castelion', 'hypersonic', 'defense', 'itar', 'ear', 'clearance', 'government'},
+            "Entertainment & Media": {'streaming', 'content', 'media', 'entertainment', 'studio', 'production', 'broadcast', 'subscription', 'viewer', 'audience', 'netflix', 'disney', 'warner'},
+            "Consulting & Professional Services": {'consulting', 'client', 'engagement', 'deliverable', 'billable', 'practice', 'partner', 'manager', 'associate', 'firm', 'mckinsey', 'deloitte', 'accenture'}
+        }
+        current_industry_noise = industry_noise.get(industry, set())
+        
+        junk_words = {
+            'please', 'note', 'designed', 'cover', 'contain', 'comprehensive', 'listing', 'activities', 'required', 'employee', 'change', 'time', 
+            'notice', 'additional', 'eligibility', 'position', 'may', 'require', 'access', 'classified', 'information', 'restricted', 'sites', 'systems', 
+            'determined', 'company', 'applicable', 'government', 'employment', 'role', 'contingent', 'upon', 'ability', 'obtain', 'maintain', 'security',
+            'clearance', 'other', 'authorization', 'satisfy', 'citizenship', 'imposed', 'law', 'regulation', 'executive', 'order', 'contract',
+            'notified', 'when', 'such', 'affirmative', 'action', 'eeo', 'statement', 'equal', 'opportunity', 'employer', 'committed',
+            'providing', 'opportunities', 'applicants', 'employees', 'without', 'regard', 'race', 'color', 'religion', 'sex', 'sexual', 'orientation',
+            'gender', 'identity', 'national', 'origin', 'age', 'disability', 'genetic', 'protected', 'veteran', 'status', 'characteristic',
+            'fostering', 'workplace', 'where', 'decisions', 'based', 'qualifications', 'business', 'needs', 'perform', 'essential',
+            'functions', 'reasonable', 'accommodation', 'requests', 'considered', 'individual', 'basis', 'handled', 'accordance',
+            'ear', 'itar', 'export', 'controlled', 'hiring', 'contractor', 'licensing', 'bureau', 'industry', 'directorate', 'defense',
+            'trade', 'controls', 'benefits', 'package', 'refer', 'bottom', 'careers', 'page', 'details', 'castelion', 'hypersonic',
+            'weapons', 'speed', 'scale', 'restore', 'american', 'deterrence', 'achieving', 'exceptional', 'engineering', 'rapid', 'testing',
+            'manufacturing', 'capacity', 'supported', 'secure', 'reliable', 'infrastructure', 'keep', 'pace', 'hands', 'on', 'leadership',
+            'troubleshooting', 'critical', 'outage', 'challenging', 'network', 'architecture', 'recruiting', 'making', 'high', 'impact',
+            'investment', 'combines', 'judgment', 'relentless', 'bias', 'toward', 'action', 'standards', 'accountability', 'results',
+            'banc', 'california', 'banks', 'family', 'offer', 'support', 'team', 'members', 'win', 'together', 'local', 'communities',
+            'foundation', 'partnering', 'organizations', 'promote', 'literacy', 'training', 'small', 'housing', 'more', 'success', 'powered',
+            'people', 'shared', 'commitment', 'delivering', 'meaningful', 'environment', 'entrepreneurial', 'thinking', 'encouraged',
+            'expected', 'empowered', 'informed', 'continue', 'grow', 'evolve', 'dedicated', 'wellbeing', 'comprehensive', 'robust', 'development',
+            'inclusive', 'programs', 'enable', 'best'
+        }
+        generic_words = {
+            'build', 'lead', 'manage', 'support', 'ensure', 'develop', 'create', 'provide', 'maintain', 'handle', 'process', 'service',
+            'client', 'customer', 'project', 'program', 'plan', 'strategy', 'goal', 'objectives', 'success', 'growth', 'operations',
+            'functions', 'use', 'using', 'used', 'make', 'made', 'get', 'got', 'go', 'went', 'see', 'saw', 'know', 'knew', 'think',
+            'thought', 'want', 'wanted', 'need', 'needed', 'help', 'helped', 'take', 'took', 'give', 'gave', 'find', 'found', 'tell', 'told',
+            'ask', 'asked', 'try', 'tried', 'leave', 'left', 'call', 'called', 'move', 'moved', 'live', 'lived', 'believe', 'hold', 'bring',
+            'brought', 'happen', 'write', 'wrote', 'sit', 'sat', 'stand', 'stood', 'lose', 'lost', 'pay', 'paid', 'meet', 'met', 'include',
+            'included', 'set', 'learn', 'play', 'run', 'like', 'carry', 'break', 'within', 'across', 'along', 'among', 'around', 'before', 
+            'behind', 'below', 'beneath', 'beside', 'between', 'beyond', 'during', 'except', 'inside', 'into', 'near', 'onto', 'upon', 
+            'toward', 'throughout', 'minus', 'plus', 'versus', 'per', 'via', 'year', 'years', 'day', 'week', 'month', 'level', 'senior', 
+            'junior', 'department', 'group', 'unit', 'field', 'industry', 'work', 'experience', 'ability', 'time', 'duties', 'responsibilities'
+        }
+        meaningful_missing = [word for word in missing if word not in junk_words and word not in generic_words and word not in current_industry_noise and len(word) > 3]
+        prioritized_missing = sorted(meaningful_missing, key=lambda x: Counter(clean(job_description))[x], reverse=True)
 
-        top_missing = prioritized_missing[:3] if 'prioritized_missing' in locals() else []
+        # Generate the 5 recommendations
+        recs = []
+        if prioritized_missing:
+            top_3 = ", ".join(prioritized_missing[:3])
+            recs.append(f"**1. Inject Top 3 Missing Keywords:** The ATS is filtering you out because it can't find **{top_3}**. Add these exact terms to your 'Skills' section and weave them into 2-3 bullet points in your most recent role.")
+        else:
+            recs.append("**1. Keyword Density Check:** Your keyword match is strong, but ensure you aren't 'keyword stuffing'. Keep density natural (2-3% of total text).")
+
+        if not re.search(r'\d+%', resume_text) and not re.search(r'\$[\d,]+M', resume_text):
+            recs.append("**2. Add Hard Metrics:** Your resume lacks quantified results ($ or %). ATS algorithms prioritize candidates who prove ROI. Add at least 3 metrics (e.g., 'Reduced costs by 15%' or 'Managed $10M budget').")
+        else:
+            recs.append("**2. Amplify Existing Metrics:** You have good metrics, but move them to the **first line** of your bullet points. Example: '**$10M Savings:** Led initiative...' instead of burying it at the end.")
+
+        key_sections = ['experience', 'education', 'skills', 'contact', 'summary']
+        completeness_score = sum(1 for s in key_sections if s in resume_text.lower()) * 20
+        if completeness_score < 80:
+            missing_secs = [s for s in ['Summary', 'Skills', 'Education'] if s.lower() not in resume_text.lower()]
+            recs.append(f"**3. Complete Missing Sections:** The ATS cannot score you fully without a **{', '.join(missing_secs)}** section. Add these immediately to boost your Completeness Score.")
+        else:
+            recs.append("**3. Optimize Section Headers:** Ensure your headers are standard (e.g., use 'Professional Experience' instead of 'My Journey'). Standard headers help the ATS parse your timeline correctly.")
+
+        if 'lead' not in resume_text.lower() and 'manage' not in resume_text.lower() and 'direct' not in resume_text.lower():
+            recs.append("**4. Strengthen Leadership Verbs:** For executive roles, the ATS looks for leadership signals. Replace passive verbs with active leadership terms like 'Directed,' 'Orchestrated,' or 'Spearheaded.'")
+        else:
+            recs.append("**4. Highlight Governance & Strategy:** For senior roles, ensure you mention 'Strategy,' 'Governance,' or 'Roadmap' in your summary. This signals executive-level thinking to the parser.")
+
+        formatting_score = 90
+        if len(resume_text.split('\n')) < 10: formatting_score -= 20
+        if re.search(r'\|.*\|.*\|', resume_text): formatting_score -= 15
+        
+        if formatting_score < 80:
+            recs.append("**5. Simplify Formatting:** Your Formatting Score is low. Remove complex tables, text boxes, or graphics from your header. Use a clean, single-column layout to ensure the ATS reads your contact info correctly.")
+        else:
+            recs.append("**5. Verify Contact Info Parsing:** Go to the 'ATS AI Parser' tab. If your Name or Email is missing from the raw text, move them out of headers/footers and into the main body text.")
+
+        for rec in recs:
+            st.markdown(f"> {rec}")
+
+        st.markdown("---")
+
+        # --- PART 2: INDUSTRY-SPECIFIC KEYWORD SUGGESTIONS ---
+        st.subheader("🎯 Industry-Specific Keyword Improvements")
+        st.markdown(f"Based on the **{industry}** job description, try rewriting your bullet points to include these terms:")
+        
+        top_missing = prioritized_missing[:3] if prioritized_missing else []
         
         if top_missing:
-            st.markdown(f"Based on the **{industry}** job description, try rewriting your bullet points to include these terms:")
-            
             for keyword in top_missing:
                 jd_context = [line.strip() for line in job_description.lower().split('\n') if keyword in line and len(line) > 20]
                 context_snippet = jd_context[0] if jd_context else f"Required expertise in {keyword}"
