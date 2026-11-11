@@ -260,6 +260,23 @@ with tab1:
             skills = ['python', 'java', 'sql', 'aws', 'react', 'docker', 'git', 'agile', 'leadership', 'communication', 'project management']
             found_skills = [s for s in skills if s in resume_text.lower()]
             
+            # --- TRANSFERABLE SKILLS BRIDGE ---
+            transferable_map = {
+                "Defense & Aerospace": {
+                    "soc 2": "Critical for Defense Compliance (CMMC/NIST)",
+                    "nist": "Directly maps to Defense Security Frameworks",
+                    "zero trust": "Highly valued in Secure Defense Networks",
+                    "hipaa": "Demonstrates experience with Strict Regulatory Controls",
+                    "pci-dss": "Shows ability to handle Sensitive Data Protection"
+                },
+                "Banking & Financial Services": {
+                    "hipaa": "Maps to Patient Data Privacy (similar to Financial Privacy)",
+                    "soc 2": "Essential for Financial Audit Readiness",
+                    "revenue cycle": "Directly translates to Banking Revenue Operations",
+                    "fraud": "Critical for Banking Security and Risk Management"
+                }
+            }
+            
             # --- DISPLAY RESULTS ---
             
             # 1. Match Score & Rejection Probability
@@ -295,7 +312,38 @@ with tab1:
             else:
                 st.success("Great! All meaningful JD keywords are present!")
             
-            # 4. Skills Detected
+            # 4. Transferable Skills Bridge
+            if industry in transferable_map:
+                st.markdown("---")
+                st.subheader("🌉 Transferable Skills Bridge")
+                st.markdown("You're pivoting industries! Here’s how your current skills map to this role:")
+                bridge_found = False
+                for skill, mapping in transferable_map[industry].items():
+                    if skill in resume_text.lower():
+                        st.markdown(f"- ✅ **{skill.upper()}** $\to$ {mapping}")
+                        bridge_found = True
+                if not bridge_found:
+                    st.info("No direct transferable skills detected for this industry pivot.")
+
+            # 5. STRATEGIC RESUME PIVOT (NEW FEATURE)
+            st.markdown("---")
+            st.subheader("🚀 Strategic Resume Pivot")
+            st.markdown(f"**Target:** {industry}")
+            
+            # Identify top 5 missing keywords that are highly weighted
+            pivot_keywords = prioritized_missing[:5] if prioritized_missing else []
+            
+            if pivot_keywords:
+                st.markdown("To improve your fit, consider adding these high-value terms to your resume:")
+                for kw in pivot_keywords:
+                    # Find context in JD
+                    context_lines = [line.strip() for line in jd_lines if kw in line and len(line) > 10]
+                    context = context_lines[0] if context_lines else "Key requirement"
+                    st.markdown(f"- 🔹 **{kw.title()}**: *\"...{context[:80]}...\"*")
+            else:
+                st.success("Your resume already contains the top strategic keywords for this role!")
+
+            # 6. Skills Detected
             st.subheader("🎯 Skills Detected")
             if found_skills:
                 for s in found_skills:
@@ -303,7 +351,7 @@ with tab1:
             else:
                 st.warning("No major technical skills detected.")
 
-            # 5. IMPROVEMENTS SECTION
+            # 7. IMPROVEMENTS SECTION
             st.markdown("---")
             st.subheader("💡 How to Improve Your Resume")
             improvements = []
