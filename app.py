@@ -16,6 +16,22 @@ try:
 except LookupError:
     nltk.download('stopwords', quiet=True)
 
+# --- HELPER FUNCTIONS (Defined Globally for All Tabs) ---
+def get_text(file):
+    if file.type == "application/pdf":
+        reader = PyPDF2.PdfReader(file)
+        return "".join([page.extract_text() for page in reader.pages])
+    else:
+        doc = docx.Document(file)
+        return "\n".join([p.text for p in doc.paragraphs])
+
+def clean(text):
+    text = text.lower()
+    text = re.sub(r'[^a-z\s]', '', text)
+    tokens = word_tokenize(text)
+    stop_words = set(nltk.corpus.stopwords.words('english'))
+    return [t for t in tokens if t not in stop_words and len(t) > 2]
+
 # --- MODERN UI CONFIGURATION ---
 st.set_page_config(page_title="Resume Evaluator", page_icon="📄", layout="wide")
 
@@ -133,7 +149,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📄 Resume ATS Evaluator")
+st.title("📄 Resume Evaluator")
 
 # Tabs for different features
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 ATS Analysis", "🤖 Parseability Check", "📝 AI Rewriter", "👔 C-Suite Narrative", "🔄 Experience Reframing"])
@@ -146,7 +162,7 @@ with st.sidebar:
     3. **Paste Job Description**
     """)
     
-    # --- INDUSTRY SELECTOR (UPDATED) ---
+    # --- INDUSTRY SELECTOR ---
     industry = st.selectbox(
         "🎯 Target Industry",
         ["General / All Industries", "Banking & Financial Services", "Healthcare & Life Sciences", 
@@ -182,23 +198,8 @@ with tab1:
         st.subheader("📊 Analysis Results")
         
         if analyze_button and uploaded_file and job_description:
-            def get_text(file):
-                if file.type == "application/pdf":
-                    reader = PyPDF2.PdfReader(file)
-                    return "".join([page.extract_text() for page in reader.pages])
-                else:
-                    doc = docx.Document(file)
-                    return "\n".join([p.text for p in doc.paragraphs])
-            
             resume_text = get_text(uploaded_file)
             
-            def clean(text):
-                text = text.lower()
-                text = re.sub(r'[^a-z\s]', '', text)
-                tokens = word_tokenize(text)
-                stop_words = set(nltk.corpus.stopwords.words('english'))
-                return [t for t in tokens if t not in stop_words and len(t) > 2]
-
             res_tokens = set(clean(resume_text))
             jd_tokens = set(clean(job_description))
             
@@ -382,15 +383,7 @@ with tab2:
         parse_file = st.file_uploader("Upload resume to check parsing", type=['pdf', 'docx'], key="parse_upload")
         
         if parse_file:
-            def get_raw_text(file):
-                if file.type == "application/pdf":
-                    reader = PyPDF2.PdfReader(file)
-                    return "".join([page.extract_text() for page in reader.pages])
-                else:
-                    doc = docx.Document(file)
-                    return "\n".join([p.text for p in doc.paragraphs])
-            
-            raw_text = get_raw_text(parse_file)
+            raw_text = get_text(parse_file)
             
             has_email = bool(re.search(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', raw_text))
             has_phone = bool(re.search(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}', raw_text))
@@ -404,6 +397,7 @@ with tab2:
 
     with col_parse2:
         if parse_file:
+            raw_text = get_text(parse_file)
             st.markdown("### 📝 Raw Text Output")
             st.markdown("*This is exactly what the ATS database will store:*")
             st.code(raw_text[:1000] + "...", language="text")
@@ -416,18 +410,20 @@ with tab3:
     
     if uploaded_file and job_description:
         if 'resume_text' not in locals():
-            def get_text(file):
-                if file.type == "application/pdf":
-                    reader = PyPDF2.PdfReader(file)
-                    return "".join([page.extract_text() for page in reader.pages])
-                else:
-                    doc = docx.Document(file)
-                    return "\n".join([p.text for p in doc.paragraphs])
             resume_text = get_text(uploaded_file)
 
         st.markdown("---")
         st.subheader("🎯 Suggested Bullet Point Improvements")
         
+        # Recalculate missing if needed
+        if 'prioritized_missing' not in locals():
+             res_tokens = set(clean(resume_text))
+             jd_tokens = set(clean(job_description))
+             missing = jd_tokens - res_tokens
+             jd_word_counts = Counter(clean(job_description))
+             # Simplified filter for this tab
+             prioritized_missing = sorted([w for w in missing if len(w)>3], key=lambda x: jd_word_counts[x], reverse=True)
+
         top_missing = prioritized_missing[:3] if 'prioritized_missing' in locals() else []
         
         if top_missing:
@@ -463,13 +459,6 @@ with tab4:
     
     if uploaded_file and job_description:
         if 'resume_text' not in locals():
-            def get_text(file):
-                if file.type == "application/pdf":
-                    reader = PyPDF2.PdfReader(file)
-                    return "".join([page.extract_text() for page in reader.pages])
-                else:
-                    doc = docx.Document(file)
-                    return "\n".join([p.text for p in doc.paragraphs])
             resume_text = get_text(uploaded_file)
 
         metrics = {
@@ -551,51 +540,64 @@ with tab5:
     
     if uploaded_file and job_description:
         if 'resume_text' not in locals():
-            def get_text(file):
-                if file.type == "application/pdf":
-                    reader = PyPDF2.PdfReader(file)
-                    return "".join([page.extract_text() for page in reader.pages])
-                else:
-                    doc = docx.Document(file)
-                    return "\n".join([p.text for p in doc.paragraphs])
             resume_text = get_text(uploaded_file)
 
         experience_block = st.text_area("Paste your Job History / Bullet Points here:", height=200, placeholder="Example: Led a team of 50 engineers...")
         
-        if st.button("✨ Generate Dynamic Narratives", use_container_width=True):
-            if experience_block:
-                # Extract key terms from the user's input
-                user_tokens = set(clean(experience_block))
-                user_keywords = [w for w in user_tokens if len(w) > 3 and w not in set(nltk.corpus.stopwords.words('english'))]
-                
-                # Find overlapping high-value keywords from the JD
-                jd_high_value = [w for w in prioritized_missing[:5] if w in user_tokens] if 'prioritized_missing' in locals() else []
-                
-                # Construct dynamic narratives
-                st.markdown("---")
-                
-                # 1. The Strategic Pivot
-                st.markdown("### 🏛️ 1. The Strategic Pivot")
-                st.info(f"**Focus:** Board-level impact and long-term vision.\n\n\"Spearheaded enterprise-wide transformation by **{' '.join(user_keywords[:3])}**, aligning technical execution with corporate growth objectives. Translated complex roadmaps into measurable business outcomes, directly supporting the organization's strategic pivot toward **{jd_high_value[0] if jd_high_value else 'operational excellence'}**.\"")
-                
-                # 2. The Technical Deep-Dive
-                st.markdown("### ⚙️ 2. The Technical Deep-Dive")
-                st.info(f"**Focus:** Hands-on engineering and architecture.\n\n\"Architected and deployed scalable solutions focused on **{' '.join(user_keywords[:3])}**. Directed hands-on engineering teams in implementing **{jd_high_value[0] if jd_high_value else 'modern infrastructure'}**, ensuring robust CI/CD pipelines, Zero Trust security, and high-availability systems.\"")
-                
-                # 3. The Compliance & Risk Focus
-                st.markdown("### 🛡️ 3. The Compliance & Risk Focus")
-                st.info(f"**Focus:** Governance, Audit, and Security.\n\n\"Established rigorous governance frameworks while executing **{' '.join(user_keywords[:3])}**. Partnered with Legal and Security to mitigate risks and ensure 100% audit readiness for initiatives involving **{jd_high_value[0] if jd_high_value else 'sensitive data'}**.\"")
-                
-                # 4. The Financial & ROI Focus
-                st.markdown("### 💰 4. The Financial & ROI Focus")
-                st.info(f"**Focus:** P&L, Cost Reduction, and Revenue.\n\n\"Optimized technology spend and operational efficiency through **{' '.join(user_keywords[:3])}**. Achieved measurable ROI by streamlining workflows and implementing **{jd_high_value[0] if jd_high_value else 'intelligent automation'}**, directly contributing to bottom-line growth.\"")
-                
-                # 5. The Modernization & Change Leader
-                st.markdown("### 🚀 5. The Modernization & Change Leader")
-                st.info(f"**Focus:** Culture, Scaling, and Adoption.\n\n\"Led cultural transformation by democratizing **{' '.join(user_keywords[:3])}** and upskilling non-technical teams. Built and scaled high-performing organizations, fostering a culture of accountability and rapid innovation around **{jd_high_value[0] if jd_high_value else 'new technologies'}**.\"")
-            else:
-                st.warning("Please paste some text from your resume first!")
+        col_ref1, col_ref2 = st.columns(2)
+        with col_ref1:
+            generate_button = st.button("✨ Generate Dynamic Narratives", use_container_width=True)
+        with col_ref2:
+            reset_reframe = st.button("🔄 Reset Input", use_container_width=True)
+
+        if reset_reframe:
+            st.session_state.pop('experience_block', None)
+            st.rerun()
+        
+        if generate_button and experience_block:
+            # Extract key terms from the user's input
+            user_tokens = set(clean(experience_block))
+            user_keywords = [w for w in user_tokens if len(w) > 3 and w not in set(nltk.corpus.stopwords.words('english'))]
+            
+            # Find overlapping high-value keywords from the JD
+            # Note: prioritized_missing is calculated in Tab 1, but we need to ensure it exists here
+            if 'prioritized_missing' not in locals():
+                 res_tokens = set(clean(resume_text))
+                 jd_tokens = set(clean(job_description))
+                 missing = jd_tokens - res_tokens
+                 jd_word_counts = Counter(clean(job_description))
+                 # Simplified filter for this tab
+                 prioritized_missing = sorted([w for w in missing if len(w)>3], key=lambda x: jd_word_counts[x], reverse=True)
+
+            jd_high_value = [w for w in prioritized_missing[:5] if w in user_tokens] if 'prioritized_missing' in locals() else []
+            
+            # Construct dynamic narratives
+            st.markdown("---")
+            
+            # 1. The Strategic Pivot
+            st.markdown("### 🏛️ 1. The Strategic Pivot")
+            st.info(f"**Focus:** Board-level impact and long-term vision.\n\n\"Spearheaded enterprise-wide transformation by **{' '.join(user_keywords[:3])}**, aligning technical execution with corporate growth objectives. Translated complex roadmaps into measurable business outcomes, directly supporting the organization's strategic pivot toward **{jd_high_value[0] if jd_high_value else 'operational excellence'}**.\"")
+            
+            # 2. The Technical Deep-Dive
+            st.markdown("### ⚙️ 2. The Technical Deep-Dive")
+            st.info(f"**Focus:** Hands-on engineering and architecture.\n\n\"Architected and deployed scalable solutions focused on **{' '.join(user_keywords[:3])}**. Directed hands-on engineering teams in implementing **{jd_high_value[0] if jd_high_value else 'modern infrastructure'}**, ensuring robust CI/CD pipelines, Zero Trust security, and high-availability systems.\"")
+            
+            # 3. The Compliance & Risk Focus
+            st.markdown("### 🛡️ 3. The Compliance & Risk Focus")
+            st.info(f"**Focus:** Governance, Audit, and Security.\n\n\"Established rigorous governance frameworks while executing **{' '.join(user_keywords[:3])}**. Partnered with Legal and Security to mitigate risks and ensure 100% audit readiness for initiatives involving **{jd_high_value[0] if jd_high_value else 'sensitive data'}**.\"")
+            
+            # 4. The Financial & ROI Focus
+            st.markdown("### 💰 4. The Financial & ROI Focus")
+            st.info(f"**Focus:** P&L, Cost Reduction, and Revenue.\n\n\"Optimized technology spend and operational efficiency through **{' '.join(user_keywords[:3])}**. Achieved measurable ROI by streamlining workflows and implementing **{jd_high_value[0] if jd_high_value else 'intelligent automation'}**, directly contributing to bottom-line growth.\"")
+            
+            # 5. The Modernization & Change Leader
+            st.markdown("### 🚀 5. The Modernization & Change Leader")
+            st.info(f"**Focus:** Culture, Scaling, and Adoption.\n\n\"Led cultural transformation by democratizing **{' '.join(user_keywords[:3])}** and upskilling non-technical teams. Built and scaled high-performing organizations, fostering a culture of accountability and rapid innovation around **{jd_high_value[0] if jd_high_value else 'new technologies'}**.\"")
+        elif generate_button and not experience_block:
+             st.warning("Please paste some text from your resume first!")
     else:
         st.info("Please upload a resume and paste a Job Description in Tab 1 to use this feature.")
 
 # Footer
+st.markdown("---")
+st.markdown("<div style='text-align: center; color: #6b7280;'>Built with ❤️ using Streamlit | <a href='https://github.com/alexnubla/Resume-Analyzer' style='color: #3b82f6;'>View on GitHub</a></div>", unsafe_allow_html=True)
