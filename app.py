@@ -533,7 +533,7 @@ with tab4:
     else:
         st.info("Please upload a resume and paste a Job Description in Tab 1 to generate narratives.")
 
-# --- TAB 5: EXPERIENCE REFRAMING (DYNAMIC) ---
+# --- TAB 5: EXPERIENCE REFRAMING (SMART LOGIC) ---
 with tab5:
     st.subheader("🔄 Experience Reframing")
     st.markdown("Paste a specific block of your job history below. The tool will dynamically rewrite it into 5 executive narratives based on the Job Description you provided in Tab 1.")
@@ -555,44 +555,55 @@ with tab5:
             st.rerun()
         
         if generate_button and experience_block:
-            # Extract key terms from the user's input
-            user_tokens = set(clean(experience_block))
-            user_keywords = [w for w in user_tokens if len(w) > 3 and w not in set(nltk.corpus.stopwords.words('english'))]
+            # Smart Keyword Extraction from User Input
+            # We look for specific high-value terms rather than just cleaning everything
+            high_value_terms = [
+                "Four Pillars", "IT Transformation", "Legacy Modernization", "Governed AI", 
+                "Visual FoxPro", "C#", "Python", "Claude", "QWEN", "SOC 2", "PCI-DSS", 
+                "HIPAA", "NIST", "WCAG", "ADA", "ELLA", "Enterprise AI", "LLM routing", 
+                "Big Swing", "AI Governance", "Data Privacy", "Model Lifecycle"
+            ]
             
+            found_terms = [term for term in high_value_terms if term.lower() in experience_block.lower()]
+            
+            # Fallback to generic keywords if no specific terms found
+            if not found_terms:
+                user_tokens = set(clean(experience_block))
+                found_terms = [w for w in user_tokens if len(w) > 3 and w not in set(nltk.corpus.stopwords.words('english'))][:3]
+
             # Find overlapping high-value keywords from the JD
-            # Note: prioritized_missing is calculated in Tab 1, but we need to ensure it exists here
             if 'prioritized_missing' not in locals():
                  res_tokens = set(clean(resume_text))
                  jd_tokens = set(clean(job_description))
                  missing = jd_tokens - res_tokens
                  jd_word_counts = Counter(clean(job_description))
-                 # Simplified filter for this tab
                  prioritized_missing = sorted([w for w in missing if len(w)>3], key=lambda x: jd_word_counts[x], reverse=True)
 
-            jd_high_value = [w for w in prioritized_missing[:5] if w in user_tokens] if 'prioritized_missing' in locals() else []
+            jd_high_value = [w for w in prioritized_missing[:5] if w in experience_block.lower()]
             
-            # Construct dynamic narratives
+            # Construct dynamic narratives with proper formatting
             st.markdown("---")
             
             # 1. The Strategic Pivot
             st.markdown("### 🏛️ 1. The Strategic Pivot")
-            st.info(f"**Focus:** Board-level impact and long-term vision.\n\n\"Spearheaded enterprise-wide transformation by **{' '.join(user_keywords[:3])}**, aligning technical execution with corporate growth objectives. Translated complex roadmaps into measurable business outcomes, directly supporting the organization's strategic pivot toward **{jd_high_value[0] if jd_high_value else 'operational excellence'}**.\"")
+            st.info(f"**Focus:** Board-level impact and long-term vision.\n\n- Spearheaded enterprise-wide transformation by implementing **{', '.join(found_terms[:2])}**, aligning technical execution with corporate growth objectives.\n- Translated complex roadmaps into measurable business outcomes, directly supporting the organization's strategic pivot toward **{jd_high_value[0] if jd_high_value else 'operational excellence'}**.")
             
             # 2. The Technical Deep-Dive
             st.markdown("### ⚙️ 2. The Technical Deep-Dive")
-            st.info(f"**Focus:** Hands-on engineering and architecture.\n\n\"Architected and deployed scalable solutions focused on **{' '.join(user_keywords[:3])}**. Directed hands-on engineering teams in implementing **{jd_high_value[0] if jd_high_value else 'modern infrastructure'}**, ensuring robust CI/CD pipelines, Zero Trust security, and high-availability systems.\"")
+            st.info(f"**Focus:** Hands-on engineering and architecture.\n\n- Architected and deployed scalable solutions focused on **{', '.join(found_terms[:2])}**.\n- Directed hands-on engineering teams in implementing **{jd_high_value[0] if jd_high_value else 'modern infrastructure'}**, ensuring robust CI/CD pipelines, Zero Trust security, and high-availability systems.")
             
             # 3. The Compliance & Risk Focus
             st.markdown("### 🛡️ 3. The Compliance & Risk Focus")
-            st.info(f"**Focus:** Governance, Audit, and Security.\n\n\"Established rigorous governance frameworks while executing **{' '.join(user_keywords[:3])}**. Partnered with Legal and Security to mitigate risks and ensure 100% audit readiness for initiatives involving **{jd_high_value[0] if jd_high_value else 'sensitive data'}**.\"")
+            st.info(f"**Focus:** Governance, Audit, and Security.\n\n- Established rigorous governance frameworks while executing **{', '.join(found_terms[:2])}**.\n- Partnered with Legal and Security to mitigate risks and ensure 100% audit readiness for initiatives involving **{jd_high_value[0] if jd_high_value else 'sensitive data'}**.")
             
             # 4. The Financial & ROI Focus
             st.markdown("### 💰 4. The Financial & ROI Focus")
-            st.info(f"**Focus:** P&L, Cost Reduction, and Revenue.\n\n\"Optimized technology spend and operational efficiency through **{' '.join(user_keywords[:3])}**. Achieved measurable ROI by streamlining workflows and implementing **{jd_high_value[0] if jd_high_value else 'intelligent automation'}**, directly contributing to bottom-line growth.\"")
+            st.info(f"**Focus:** P&L, Cost Reduction, and Revenue.\n\n- Optimized technology spend and operational efficiency through **{', '.join(found_terms[:2])}**.\n- Achieved measurable ROI by streamlining workflows and implementing **{jd_high_value[0] if jd_high_value else 'intelligent automation'}**, directly contributing to bottom-line growth.")
             
             # 5. The Modernization & Change Leader
             st.markdown("### 🚀 5. The Modernization & Change Leader")
-            st.info(f"**Focus:** Culture, Scaling, and Adoption.\n\n\"Led cultural transformation by democratizing **{' '.join(user_keywords[:3])}** and upskilling non-technical teams. Built and scaled high-performing organizations, fostering a culture of accountability and rapid innovation around **{jd_high_value[0] if jd_high_value else 'new technologies'}**.\"")
+            st.info(f"**Focus:** Culture, Scaling, and Adoption.\n\n- Led cultural transformation by democratizing **{', '.join(found_terms[:2])}** and upskilling non-technical teams.\n- Built and scaled high-performing organizations, fostering a culture of accountability and rapid innovation around **{jd_high_value[0] if jd_high_value else 'new technologies'}**.")
+
         elif generate_button and not experience_block:
              st.warning("Please paste some text from your resume first!")
     else:
