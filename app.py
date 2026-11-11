@@ -152,7 +152,7 @@ st.markdown("""
 st.title("📄 Resume Evaluator")
 
 # Tabs for different features
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 ATS Analysis", "🤖 Parseability Check", "📝 AI Rewriter", "👔 C-Suite Narrative", "🔄 Experience Reframing"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 ATS Analysis", "🤖 ATS AI Parser", "📝 AI Rewriter", "👔 C-Suite Narrative", "🔄 Experience Reframing"])
 
 with st.sidebar:
     st.header("⚙️ Configuration")
@@ -400,36 +400,93 @@ with tab1:
         elif not uploaded_file or not job_description:
             st.info("Please upload a resume and paste a Job Description to start.")
 
-# --- TAB 2: PARSEABILITY CHECK ---
+# --- TAB 2: ATS AI PARSER (ENHANCED) ---
 with tab2:
-    st.subheader("🤖 How the ATS Robot Sees Your Resume")
-    st.markdown("Applicant Tracking Systems strip away all formatting. Use this tool to ensure your contact info is readable.")
+    st.subheader("🤖 ATS AI Parser: What the Robot Sees")
+    st.markdown("This report simulates how an AI-driven ATS extracts and categorizes data from your resume.")
     
     col_parse1, col_parse2 = st.columns([1, 1])
     
     with col_parse1:
-        parse_file = st.file_uploader("Upload resume to check parsing", type=['pdf', 'docx'], key="parse_upload")
+        parse_file = st.file_uploader("Upload resume to parse", type=['pdf', 'docx'], key="parse_upload")
         
         if parse_file:
             raw_text = get_text(parse_file)
             
-            has_email = bool(re.search(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', raw_text))
-            has_phone = bool(re.search(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}', raw_text))
+            # 1. Name Detected
+            name_match = re.search(r'^([A-Z][a-z]+ [A-Z][a-z]+)', raw_text)
+            name = name_match.group(1) if name_match else "Not Detected"
             
-            st.markdown("### ✅ Parsing Status")
-            if has_email: st.success("✅ Email Address Detected")
-            else: st.error("❌ Email Address Missing or Unreadable")
-                
-            if has_phone: st.success("✅ Phone Number Detected")
-            else: st.error("❌ Phone Number Missing or Unreadable")
+            # 2. Address Detected
+            address_match = re.search(r'([A-Za-z\s]+, [A-Z]{2}\s+\d{5})', raw_text)
+            address = address_match.group(1) if address_match else "Not Detected"
+            
+            # 3. Email Detected
+            email_match = re.search(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', raw_text)
+            email = email_match.group(0) if email_match else "Not Detected"
+            
+            # 4. Sections Detected
+            sections = []
+            section_keywords = ['summary', 'experience', 'education', 'skills', 'certifications', 'projects']
+            for sec in section_keywords:
+                if sec in raw_text.lower():
+                    sections.append(sec.title())
+            
+            # 5. Skills Recognized
+            skill_keywords = ['python', 'aws', 'azure', 'sql', 'leadership', 'agile', 'docker', 'kubernetes', 'ai', 'llm', 'soc 2', 'hipaa']
+            found_skills = [s for s in skill_keywords if s in raw_text.lower()]
+            
+            # 6. LinkedIn
+            linkedin_match = re.search(r'linkedin\.com/in/[a-zA-Z0-9_-]+', raw_text)
+            linkedin = linkedin_match.group(0) if linkedin_match else "Not Detected"
+            
+            # 7. Date Range
+            date_matches = re.findall(r'\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b', raw_text)
+            dates = list(set(date_matches)) # Unique months/years found
+            
+            # 8. Bullet Points
+            bullet_count = len(re.findall(r'^\s*[\-\*\•]\s', raw_text, re.MULTILINE))
+            
+            # 9. Quantified Impact ($ or %)
+            impacts = re.findall(r'(\$[\d,]+M+|\d+%)', raw_text)
+            
+            # 10. Word Count
+            word_count = len(raw_text.split())
+            
+            # 11. Seniority Signal
+            seniority_terms = ['chief', 'head', 'director', 'vp', 'vice president', 'senior', 'lead']
+            seniority_found = [s for s in seniority_terms if s in raw_text.lower()]
+            seniority_signal = "Executive / Leadership" if any(s in ['chief', 'head', 'vp', 'vice president'] for s in seniority_found) else "Mid-Level"
+            
+            # 12. Industry Match
+            industry_terms = {
+                "Healthcare": ['hipaa', 'emr', 'ehr', 'patient', 'clinic'],
+                "Finance": ['bank', 'credit', 'fraud', 'pci-dss', 'sox'],
+                "Tech": ['saas', 'cloud', 'api', 'devops', 'llm'],
+                "Defense": ['clearance', 'itar', 'defense', 'government']
+            }
+            detected_industries = [ind for ind, terms in industry_terms.items() if any(t in raw_text.lower() for t in terms)]
+
+            # Display Parsing Report
+            st.markdown("### 📋 Parsing Report")
+            st.markdown(f"**1. Name Detected:** `{name}`")
+            st.markdown(f"**2. Address Detected:** `{address}`")
+            st.markdown(f"**3. Email Detected:** `{email}`")
+            st.markdown(f"**4. Sections Found:** {', '.join(sections) if sections else 'None'}")
+            st.markdown(f"**5. Skills Recognized:** {', '.join(found_skills) if found_skills else 'None'}")
+            st.markdown(f"**6. LinkedIn:** `{linkedin}`")
+            st.markdown(f"**7. Date Formats:** {', '.join(dates[:5]) if dates else 'None'}")
+            st.markdown(f"**8. Bullet Points:** {bullet_count}")
+            st.markdown(f"**9. Quantified Impact:** {', '.join(impacts) if impacts else 'None'}")
+            st.markdown(f"**10. Word Count:** {word_count}")
+            st.markdown(f"**11. Seniority Signal:** {seniority_signal}")
+            st.markdown(f"**12. Industry Match:** {', '.join(detected_industries) if detected_industries else 'General'}")
 
     with col_parse2:
         if parse_file:
-            raw_text = get_text(parse_file)
-            st.markdown("### 📝 Raw Text Output")
-            st.markdown("*This is exactly what the ATS database will store:*")
-            st.code(raw_text[:1000] + "...", language="text")
-            st.info("💡 **Tip:** If your name or contact info is missing, move it out of headers/footers.")
+            st.markdown("### 📝 Raw Text Preview")
+            st.markdown("*This is the unformatted text the ATS processes:*")
+            st.code(raw_text[:1500] + "...", language="text")
 
 # --- TAB 3: AI RESUME REWRITER ---
 with tab3:
