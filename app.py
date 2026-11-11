@@ -400,7 +400,7 @@ with tab1:
         elif not uploaded_file or not job_description:
             st.info("Please upload a resume and paste a Job Description to start.")
 
-# --- TAB 2: ATS AI PARSER (ENHANCED WITH ROBUST NAME DETECTION) ---
+# --- TAB 2: ATS AI PARSER (ENHANCED WITH ROBUST NAME DETECTION & PREVIEW) ---
 with tab2:
     st.subheader("🤖 ATS AI Parser: What the Robot Sees")
     st.markdown("This report simulates how an AI-driven ATS extracts and categorizes data from your resume.")
@@ -414,8 +414,9 @@ with tab2:
             raw_text = get_text(parse_file)
             
             # 1. Name Detected (Robust Logic for Table Headers)
-            # Look for All-Caps words at the start of the document
-            name_match = re.search(r'^([A-Z][A-Z\s]+?[A-Z])', raw_text)
+            # Look for All-Caps words at the start of the document (first 500 chars)
+            header_snippet = raw_text[:500]
+            name_match = re.search(r'([A-Z][A-Z\s]+?[A-Z])', header_snippet)
             if name_match:
                 name = name_match.group(1).strip()
                 # Clean up extra spaces from table extraction
@@ -491,8 +492,19 @@ with tab2:
     with col_parse2:
         if parse_file:
             st.markdown("### 📝 Raw Text Preview")
-            st.markdown("*This is the unformatted text the ATS processes:*")
-            st.code(raw_text[:1500] + "...", language="text")
+            st.markdown("*Click below to view the full unformatted text the ATS processes:*")
+            
+            # Button to open modal
+            if st.button("👁️ Open Full Raw Text Preview", use_container_width=True):
+                st.session_state['show_raw_text'] = True
+            
+            # Modal logic
+            if st.session_state.get('show_raw_text', False):
+                with st.expander("Full Raw Text Extract", expanded=True):
+                    st.code(raw_text, language="text")
+                    if st.button("Close Preview"):
+                        st.session_state['show_raw_text'] = False
+                        st.rerun()
 
 # --- TAB 3: AI RESUME REWRITER ---
 with tab3:
