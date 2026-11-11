@@ -400,7 +400,7 @@ with tab1:
         elif not uploaded_file or not job_description:
             st.info("Please upload a resume and paste a Job Description to start.")
 
-# --- TAB 2: ATS AI PARSER (ENHANCED) ---
+# --- TAB 2: ATS AI PARSER (ENHANCED WITH ROBUST NAME DETECTION) ---
 with tab2:
     st.subheader("🤖 ATS AI Parser: What the Robot Sees")
     st.markdown("This report simulates how an AI-driven ATS extracts and categorizes data from your resume.")
@@ -413,9 +413,15 @@ with tab2:
         if parse_file:
             raw_text = get_text(parse_file)
             
-            # 1. Name Detected
-            name_match = re.search(r'^([A-Z][a-z]+ [A-Z][a-z]+)', raw_text)
-            name = name_match.group(1) if name_match else "Not Detected"
+            # 1. Name Detected (Robust Logic for Table Headers)
+            # Look for All-Caps words at the start of the document
+            name_match = re.search(r'^([A-Z][A-Z\s]+?[A-Z])', raw_text)
+            if name_match:
+                name = name_match.group(1).strip()
+                # Clean up extra spaces from table extraction
+                name = re.sub(r'\s+', ' ', name)
+            else:
+                name = "Not Detected"
             
             # 2. Address Detected
             address_match = re.search(r'([A-Za-z\s]+, [A-Z]{2}\s+\d{5})', raw_text)
@@ -427,13 +433,13 @@ with tab2:
             
             # 4. Sections Detected
             sections = []
-            section_keywords = ['summary', 'experience', 'education', 'skills', 'certifications', 'projects']
+            section_keywords = ['summary', 'experience', 'education', 'skills', 'certifications', 'projects', 'competencies']
             for sec in section_keywords:
                 if sec in raw_text.lower():
                     sections.append(sec.title())
             
             # 5. Skills Recognized
-            skill_keywords = ['python', 'aws', 'azure', 'sql', 'leadership', 'agile', 'docker', 'kubernetes', 'ai', 'llm', 'soc 2', 'hipaa']
+            skill_keywords = ['python', 'aws', 'azure', 'sql', 'leadership', 'agile', 'docker', 'kubernetes', 'ai', 'llm', 'soc 2', 'hipaa', 'cloudflare', 'okta', 'generative ai']
             found_skills = [s for s in skill_keywords if s in raw_text.lower()]
             
             # 6. LinkedIn
@@ -454,15 +460,15 @@ with tab2:
             word_count = len(raw_text.split())
             
             # 11. Seniority Signal
-            seniority_terms = ['chief', 'head', 'director', 'vp', 'vice president', 'senior', 'lead']
+            seniority_terms = ['chief', 'head', 'director', 'vp', 'vice president', 'senior', 'lead', 'cto', 'cio']
             seniority_found = [s for s in seniority_terms if s in raw_text.lower()]
-            seniority_signal = "Executive / Leadership" if any(s in ['chief', 'head', 'vp', 'vice president'] for s in seniority_found) else "Mid-Level"
+            seniority_signal = "Executive / Leadership" if any(s in ['chief', 'head', 'vp', 'vice president', 'cto', 'cio'] for s in seniority_found) else "Mid-Level"
             
             # 12. Industry Match
             industry_terms = {
-                "Healthcare": ['hipaa', 'emr', 'ehr', 'patient', 'clinic'],
-                "Finance": ['bank', 'credit', 'fraud', 'pci-dss', 'sox'],
-                "Tech": ['saas', 'cloud', 'api', 'devops', 'llm'],
+                "Healthcare": ['hipaa', 'emr', 'ehr', 'patient', 'clinic', 'kaiser', 'acuity'],
+                "Finance": ['bank', 'credit', 'fraud', 'pci-dss', 'sox', 'infosend'],
+                "Tech": ['saas', 'cloud', 'api', 'devops', 'llm', 'icann'],
                 "Defense": ['clearance', 'itar', 'defense', 'government']
             }
             detected_industries = [ind for ind, terms in industry_terms.items() if any(t in raw_text.lower() for t in terms)]
