@@ -16,12 +16,88 @@ try:
 except LookupError:
     nltk.download('stopwords', quiet=True)
 
+# --- MODERN UI CONFIGURATION ---
 st.set_page_config(page_title="Resume ATS Evaluator", page_icon="📄", layout="wide")
+
+# Custom CSS for a Striking, Modern Look
+st.markdown("""
+<style>
+    /* Main Background and Font */
+    .stApp {
+        background-color: #0e1117;
+        color: #fafafa;
+    }
+    
+    /* Headers */
+    h1, h2, h3 {
+        color: #ffffff !important;
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+    }
+    
+    /* Metrics Cards */
+    [data-testid="metric-container"] {
+        background-color: #1f2937;
+        border: 1px solid #374151;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Buttons */
+    .stButton > button {
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
+    }
+    
+    /* Text Areas and Inputs */
+    .stTextInput > div > div > input, .stTextArea > div > div > textarea {
+        background-color: #1f2937;
+        color: #ffffff;
+        border: 1px solid #374151;
+    }
+    
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background-color: #111827;
+        border-right: 1px solid #374151;
+    }
+    
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 24px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        white-space: pre-wrap;
+        background-color: #1f2937;
+        border-radius: 4px 4px 0px 0px;
+        gap: 1px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+    
+    /* Info Boxes */
+    .stAlert {
+        background-color: #1f2937;
+        border: 1px solid #3b82f6;
+        color: #ffffff;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 st.title("📄 Resume ATS Evaluator")
 
 # Tabs for different features
-tab1, tab2, tab3, tab4 = st.tabs(["📊 ATS Analysis", "🤖 ATS Parseability Check", "📝 AI Resume Rewriter", "👔 C-Suite Narrative"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 ATS Analysis", "🤖 Parseability Check", "📝 AI Rewriter", "👔 C-Suite Narrative", "🔄 Experience Reframer"])
 
 with st.sidebar:
     st.header("Instructions")
@@ -578,6 +654,49 @@ with tab4:
 
     else:
         st.info("Please upload a resume and paste a Job Description in the 'ATS Analysis' tab to generate your C-Suite Narratives.")
+
+# --- TAB 5: EXPERIENCE REFRAMER ---
+with tab5:
+    st.subheader("🔄 Experience Reframer")
+    st.markdown("Paste a specific block of your job history below. The tool will rewrite it into 5 executive narratives based on the Job Description you provided in Tab 1.")
+    
+    if uploaded_file and job_description:
+        if 'resume_text' not in locals():
+            def get_text(file):
+                if file.type == "application/pdf":
+                    reader = PyPDF2.PdfReader(file)
+                    return "".join([page.extract_text() for page in reader.pages])
+                else:
+                    doc = docx.Document(file)
+                    return "\n".join([p.text for p in doc.paragraphs])
+            resume_text = get_text(uploaded_file)
+
+        experience_block = st.text_area("Paste your Job History / Bullet Points here:", height=200, placeholder="Example: Led a team of 50 engineers...")
+        
+        if st.button("✨ Generate Narratives", use_container_width=True):
+            if experience_block:
+                metrics = {"savings": "$10M+", "portfolio": "$20M+", "team": "120+"}
+                
+                st.markdown("---")
+                
+                st.markdown("### 🏛️ 1. The Strategic Pivot")
+                st.info(f"**Focus:** Board-level impact and long-term vision.\n\n\"Spearheaded enterprise-wide technology transformation, managing a **{metrics['portfolio']}** portfolio. Translated complex technical roadmaps into measurable business outcomes, delivering **{metrics['savings']}** in operational savings while aligning IT strategy with core corporate growth objectives.\"")
+                
+                st.markdown("### ⚙️ 2. The Technical Deep-Dive")
+                st.info(f"**Focus:** Hands-on engineering and architecture.\n\n\"Architected and deployed scalable cloud-native solutions and Agentic AI frameworks. Directed hands-on engineering teams in legacy-to-modern migrations, ensuring robust CI/CD pipelines, Zero Trust security implementation, and high-availability infrastructure supporting **{metrics['team']}** global users.\"")
+                
+                st.markdown("### 🛡️ 3. The Compliance & Risk Focus")
+                st.info(f"**Focus:** Governance, Audit, and Security.\n\n\"Established rigorous governance frameworks aligned with NIST, SOC 2, and HIPAA standards. Partnered with Legal and Security to mitigate lateral movement risks and ensure 100% audit readiness for enterprise-scale initiatives handling sensitive, regulated data.\"")
+                
+                st.markdown("### 💰 4. The Financial & ROI Focus")
+                st.info(f"**Focus:** P&L, Cost Reduction, and Revenue.\n\n\"Optimized technology spend through strategic vendor negotiations and portfolio rationalization, achieving **{metrics['savings']}** in annual cost savings. Drove revenue cycle improvements through intelligent automation, directly contributing to double-digit EBITDA growth.\"")
+                
+                st.markdown("### 🚀 5. The Modernization & Change Leader")
+                st.info(f"**Focus:** Culture, Scaling, and Adoption.\n\n\"Led cultural transformation by democratizing AI adoption and upskilling non-technical teams. Built and scaled high-performing engineering organizations, fostering a culture of accountability, rapid innovation, and continuous improvement across matrixed delivery models.\"")
+            else:
+                st.warning("Please paste some text from your resume first!")
+    else:
+        st.info("Please upload a resume and paste a Job Description in Tab 1 to use this feature.")
 
 # Footer
 st.markdown("---")
