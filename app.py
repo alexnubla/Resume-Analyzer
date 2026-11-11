@@ -462,32 +462,29 @@ with tab2:
             # 3. Email Detected
             email_match = re.search(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', raw_text)
             email = email_match.group(0) if email_match else "Not Detected"
+
+            # 4. Phone Detected (NEW)
+            phone_match = re.search(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}', raw_text)
+            phone = phone_match.group(0) if phone_match else "Not Detected"
             
-            # 4. Sections Detected
+            # 5. Sections Detected
             sections = []
             section_keywords = ['summary', 'experience', 'education', 'skills', 'certifications', 'projects', 'competencies']
             for sec in section_keywords:
                 if sec in raw_text.lower():
                     sections.append(sec.title())
             
-            # 5. Skills Recognized
+            # 6. Skills Recognized
             skill_keywords = ['python', 'aws', 'azure', 'sql', 'leadership', 'agile', 'docker', 'kubernetes', 'ai', 'llm', 'soc 2', 'hipaa', 'cloudflare', 'okta', 'generative ai']
             found_skills = [s for s in skill_keywords if s in raw_text.lower()]
             
-            # 6. LinkedIn
+            # 7. LinkedIn
             linkedin_match = re.search(r'linkedin\.com/in/[a-zA-Z0-9_-]+', raw_text)
             linkedin = linkedin_match.group(0) if linkedin_match else "Not Detected"
             
-            # 7. Timeline (Replaces Date Format) - Extracts Month + Year
+            # 8. Timeline (Replaces Date Format) - Extracts Month + Year
             timeline_matches = re.findall(r'\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b', raw_text)
             timeline = list(set(timeline_matches)) # Unique Month/Year pairs
-            
-            # 8. Bullet Points (Enhanced for Word Docs)
-            # Count lines starting with common bullet chars or list styles
-            bullet_count = len(re.findall(r'^\s*[\-\*\•]\s', raw_text, re.MULTILINE))
-            # Also check for python-docx list styles if available (simplified here by checking for numbered lists too)
-            numbered_list_count = len(re.findall(r'^\s*\d+\.\s', raw_text, re.MULTILINE))
-            total_bullets = bullet_count + numbered_list_count
             
             # 9. Quantified Impact ($ or %) - Deduplicated
             impacts_raw = re.findall(r'(\$[\d,]+M+|\d+%)', raw_text)
@@ -515,11 +512,11 @@ with tab2:
             st.markdown(f"**1. Name Detected:** `{name}`")
             st.markdown(f"**2. Address Detected:** `{address}`")
             st.markdown(f"**3. Email Detected:** `{email}`")
-            st.markdown(f"**4. Sections Found:** {', '.join(sections) if sections else 'None'}")
-            st.markdown(f"**5. Skills Recognized:** {', '.join(found_skills) if found_skills else 'None'}")
-            st.markdown(f"**6. LinkedIn:** `{linkedin}`")
-            st.markdown(f"**7. Timeline:** {', '.join(timeline[:10]) if timeline else 'None'}")
-            st.markdown(f"**8. Bullet Points:** {total_bullets}")
+            st.markdown(f"**4. Phone Detected:** `{phone}`")
+            st.markdown(f"**5. Sections Found:** {', '.join(sections) if sections else 'None'}")
+            st.markdown(f"**6. Skills Recognized:** {', '.join(found_skills) if found_skills else 'None'}")
+            st.markdown(f"**7. LinkedIn:** `{linkedin}`")
+            st.markdown(f"**8. Timeline:** {', '.join(timeline[:10]) if timeline else 'None'}")
             st.markdown(f"**9. Quantified Impact:** {', '.join(impacts) if impacts else 'None'}")
             st.markdown(f"**10. Word Count:** {word_count}")
             st.markdown(f"**11. Seniority Signal:** {seniority_signal}")
@@ -553,7 +550,7 @@ with tab3:
 
         st.markdown("---")
         
-        # --- PART 1: RISK REDUCTION PLAN (FROM TAB 1) ---
+        # --- PART 1: RISK REDUCTION PLAN (FROM TAB 1) WITH SUGGESTED REWRITES ---
         st.subheader("📉 Risk Reduction Plan")
         st.markdown("Apply these 5 critical fixes first to lower your rejection risk:")
         
@@ -613,43 +610,92 @@ with tab3:
         meaningful_missing = [word for word in missing if word not in junk_words and word not in generic_words and word not in current_industry_noise and len(word) > 3]
         prioritized_missing = sorted(meaningful_missing, key=lambda x: Counter(clean(job_description))[x], reverse=True)
 
-        # Generate the 5 recommendations
+        # Generate the 5 recommendations WITH SUGGESTED REWRITES
         recs = []
+        
+        # 1. Keywords
         if prioritized_missing:
             top_3 = ", ".join(prioritized_missing[:3])
-            recs.append(f"**1. Inject Top 3 Missing Keywords:** The ATS is filtering you out because it can't find **{top_3}**. Add these exact terms to your 'Skills' section and weave them into 2-3 bullet points in your most recent role.")
+            recs.append({
+                "title": "**1. Inject Top 3 Missing Keywords**",
+                "desc": f"The ATS is filtering you out because it can't find **{top_3}**.",
+                "rewrite": f"*Suggested Rewrite:* \"Spearheaded enterprise initiatives in **{top_3}**, aligning technical execution with corporate growth objectives and reducing operational risk.\""
+            })
         else:
-            recs.append("**1. Keyword Density Check:** Your keyword match is strong, but ensure you aren't 'keyword stuffing'. Keep density natural (2-3% of total text).")
+            recs.append({
+                "title": "**1. Keyword Density Check**",
+                "desc": "Your keyword match is strong, but ensure you aren't 'keyword stuffing'.",
+                "rewrite": "*Suggested Rewrite:* Ensure keywords appear naturally in context (2-3% density) rather than in isolated lists."
+            })
 
+        # 2. Metrics
         if not re.search(r'\d+%', resume_text) and not re.search(r'\$[\d,]+M', resume_text):
-            recs.append("**2. Add Hard Metrics:** Your resume lacks quantified results ($ or %). ATS algorithms prioritize candidates who prove ROI. Add at least 3 metrics (e.g., 'Reduced costs by 15%' or 'Managed $10M budget').")
+            recs.append({
+                "title": "**2. Add Hard Metrics**",
+                "desc": "Your resume lacks quantified results ($ or %). ATS algorithms prioritize candidates who prove ROI.",
+                "rewrite": "*Suggested Rewrite:* \"Delivered **$10M+** in cost savings and improved revenue cycle efficiency by **12%** through intelligent automation.\""
+            })
         else:
-            recs.append("**2. Amplify Existing Metrics:** You have good metrics, but move them to the **first line** of your bullet points. Example: '**$10M Savings:** Led initiative...' instead of burying it at the end.")
+            recs.append({
+                "title": "**2. Amplify Existing Metrics**",
+                "desc": "You have good metrics, but move them to the **first line** of your bullet points.",
+                "rewrite": "*Suggested Rewrite:* \"**$10M Savings:** Led initiative to optimize cloud spend, resulting in 15% reduction in annual OPEX.\""
+            })
 
+        # 3. Sections
         key_sections = ['experience', 'education', 'skills', 'contact', 'summary']
         completeness_score = sum(1 for s in key_sections if s in resume_text.lower()) * 20
         if completeness_score < 80:
             missing_secs = [s for s in ['Summary', 'Skills', 'Education'] if s.lower() not in resume_text.lower()]
-            recs.append(f"**3. Complete Missing Sections:** The ATS cannot score you fully without a **{', '.join(missing_secs)}** section. Add these immediately to boost your Completeness Score.")
+            recs.append({
+                "title": "**3. Complete Missing Sections**",
+                "desc": f"The ATS cannot score you fully without a **{', '.join(missing_secs)}** section.",
+                "rewrite": "*Suggested Rewrite:* Add a dedicated 'Skills' section listing: Python, AWS, SOC 2, HIPAA, and Zero Trust Architecture."
+            })
         else:
-            recs.append("**3. Optimize Section Headers:** Ensure your headers are standard (e.g., use 'Professional Experience' instead of 'My Journey'). Standard headers help the ATS parse your timeline correctly.")
+            recs.append({
+                "title": "**3. Optimize Section Headers**",
+                "desc": "Ensure your headers are standard (e.g., use 'Professional Experience' instead of 'My Journey').",
+                "rewrite": "*Suggested Rewrite:* Use standard headers like 'Professional Experience', 'Education', and 'Technical Skills' for better parsing."
+            })
 
+        # 4. Leadership
         if 'lead' not in resume_text.lower() and 'manage' not in resume_text.lower() and 'direct' not in resume_text.lower():
-            recs.append("**4. Strengthen Leadership Verbs:** For executive roles, the ATS looks for leadership signals. Replace passive verbs with active leadership terms like 'Directed,' 'Orchestrated,' or 'Spearheaded.'")
+            recs.append({
+                "title": "**4. Strengthen Leadership Verbs**",
+                "desc": "For executive roles, the ATS looks for leadership signals.",
+                "rewrite": "*Suggested Rewrite:* Replace 'Responsible for' with 'Directed', 'Orchestrated', or 'Spearheaded' to signal executive authority."
+            })
         else:
-            recs.append("**4. Highlight Governance & Strategy:** For senior roles, ensure you mention 'Strategy,' 'Governance,' or 'Roadmap' in your summary. This signals executive-level thinking to the parser.")
+            recs.append({
+                "title": "**4. Highlight Governance & Strategy**",
+                "desc": "For senior roles, ensure you mention 'Strategy,' 'Governance,' or 'Roadmap' in your summary.",
+                "rewrite": "*Suggested Rewrite:* \"Defined multi-year IT strategy and governance framework, aligning technology investment with board-level growth objectives.\""
+            })
 
+        # 5. Formatting
         formatting_score = 90
         if len(resume_text.split('\n')) < 10: formatting_score -= 20
         if re.search(r'\|.*\|.*\|', resume_text): formatting_score -= 15
         
         if formatting_score < 80:
-            recs.append("**5. Simplify Formatting:** Your Formatting Score is low. Remove complex tables, text boxes, or graphics from your header. Use a clean, single-column layout to ensure the ATS reads your contact info correctly.")
+            recs.append({
+                "title": "**5. Simplify Formatting**",
+                "desc": "Your Formatting Score is low. Remove complex tables or graphics from your header.",
+                "rewrite": "*Suggested Rewrite:* Use a clean, single-column layout with standard fonts (Arial, Calibri) to ensure ATS readability."
+            })
         else:
-            recs.append("**5. Verify Contact Info Parsing:** Go to the 'ATS AI Parser' tab. If your Name or Email is missing from the raw text, move them out of headers/footers and into the main body text.")
+            recs.append({
+                "title": "**5. Verify Contact Info Parsing**",
+                "desc": "Go to the 'ATS AI Parser' tab. If your Name or Email is missing from the raw text, move them.",
+                "rewrite": "*Suggested Rewrite:* Move contact info out of headers/footers and into the main body text at the very top of the document."
+            })
 
         for rec in recs:
-            st.markdown(f"> {rec}")
+            st.markdown(f"**{rec['title']}**")
+            st.markdown(f"> {rec['desc']}")
+            st.markdown(f"_💡 {rec['rewrite']}_")
+            st.markdown("")
 
         st.markdown("---")
 
