@@ -474,15 +474,16 @@ with tab2:
             linkedin_match = re.search(r'linkedin\.com/in/[a-zA-Z0-9_-]+', raw_text)
             linkedin = linkedin_match.group(0) if linkedin_match else "Not Detected"
             
-            # 7. Date Range
-            date_matches = re.findall(r'\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b', raw_text)
-            dates = list(set(date_matches)) # Unique months/years found
+            # 7. Timeline (Replaces Date Format)
+            timeline_matches = re.findall(r'\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b', raw_text)
+            timeline = list(set(timeline_matches)) # Unique months/years found
             
             # 8. Bullet Points
             bullet_count = len(re.findall(r'^\s*[\-\*\•]\s', raw_text, re.MULTILINE))
             
-            # 9. Quantified Impact ($ or %)
-            impacts = re.findall(r'(\$[\d,]+M+|\d+%)', raw_text)
+            # 9. Quantified Impact ($ or %) - Deduplicated
+            impacts_raw = re.findall(r'(\$[\d,]+M+|\d+%)', raw_text)
+            impacts = list(set(impacts_raw)) # Remove duplicates
             
             # 10. Word Count
             word_count = len(raw_text.split())
@@ -509,7 +510,7 @@ with tab2:
             st.markdown(f"**4. Sections Found:** {', '.join(sections) if sections else 'None'}")
             st.markdown(f"**5. Skills Recognized:** {', '.join(found_skills) if found_skills else 'None'}")
             st.markdown(f"**6. LinkedIn:** `{linkedin}`")
-            st.markdown(f"**7. Date Formats:** {', '.join(dates[:5]) if dates else 'None'}")
+            st.markdown(f"**7. Timeline:** {', '.join(timeline[:10]) if timeline else 'None'}")
             st.markdown(f"**8. Bullet Points:** {bullet_count}")
             st.markdown(f"**9. Quantified Impact:** {', '.join(impacts) if impacts else 'None'}")
             st.markdown(f"**10. Word Count:** {word_count}")
