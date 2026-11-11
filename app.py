@@ -599,5 +599,3 @@ with tab5:
         st.info("Please upload a resume and paste a Job Description in Tab 1 to use this feature.")
 
 # Footer
-st.markdown("---")
-st.markdown("<div style='text-align: center; color: #6b7280;'>Built with ❤️ using Streamlit | <a href='https://github.com/alexnubla/Resume-Analyzer' style='color: #3b82f6;'>View on GitHub</a></div>", unsafe_allow_html=True)
