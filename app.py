@@ -26,10 +26,21 @@ tab1, tab2 = st.tabs(["📊 ATS Analysis", "🤖 ATS Parseability Check"])
 with st.sidebar:
     st.header("Instructions")
     st.markdown("""
-    1. **Upload your resume** (PDF or DOCX format)
-    2. **Enter the job description** (for Analysis tab)
-    3. **Explore the tabs** to see your score and how robots read your file.
+    1. **Select your Target Industry** to optimize the analysis.
+    2. **Upload your resume** (PDF or DOCX format).
+    3. **Enter the job description** (for Analysis tab).
     """)
+    
+    # --- INDUSTRY SELECTOR ---
+    industry = st.selectbox(
+        "🎯 Target Industry",
+        ["General / All Industries", "Banking & Financial Services", "Healthcare & Life Sciences", 
+         "Technology & AI", "Defense & Aerospace", "Retail & E-commerce"]
+    )
+    
+    st.markdown("---")
+    st.markdown("**Why this matters:**")
+    st.caption("Selecting an industry helps the AI ignore irrelevant jargon and focus on the skills that actually matter for your target role.")
 
 # --- TAB 1: ATS ANALYSIS ---
 with tab1:
@@ -95,13 +106,41 @@ with tab1:
             
             match_score = (len(common) / len(jd_tokens)) * 100 if jd_tokens else 0
             
-            # --- SECTION-BASED WEIGHTING & SMART FILTERING ---
+            # --- DYNAMIC INDUSTRY FILTERING ---
+            
+            # Define Industry-Specific Noise (Words to ignore if NOT in that industry)
+            industry_noise = {
+                "Banking & Financial Services": {
+                    'banc', 'california', 'banks', 'credit', 'deposits', 'treasury', 
+                    'fraud', 'bsa', 'aml', 'fintech', 'ledger', 'transaction', 'loan',
+                    'mortgage', 'underwriting', 'compliance', 'sox', 'fdic', 'occ'
+                },
+                "Healthcare & Life Sciences": {
+                    'hipaa', 'emr', 'ehr', 'patient', 'clinical', 'claims', 'revenue',
+                    'cycle', 'medicare', 'medicaid', 'pharma', 'biotech', 'fda',
+                    'hospital', 'clinic', 'diagnosis', 'treatment', 'epic', 'cerner'
+                },
+                "Technology & AI": {
+                    'llm', 'rag', 'agentic', 'genai', 'mlops', 'devops', 'saas',
+                    'paas', 'iaas', 'api', 'microservices', 'cloud', 'aws', 'azure',
+                    'github', 'gitlab', 'ci/cd', 'python', 'java', 'react', 'docker'
+                },
+                "Defense & Aerospace": {
+                    'castelion', 'hypersonic', 'defense', 'itar', 'ear', 'clearance',
+                    'government', 'classified', 'manufacturing', 'test', 'flight',
+                    'weapons', 'deterrence', 'sites', 'restricted', 'export'
+                }
+            }
+            
+            # Get the noise list for the selected industry
+            current_industry_noise = industry_noise.get(industry, set())
             
             # Define High-Value Sections (Keywords that should be prioritized)
             high_value_headers = [
                 'responsibilities', 'duties', 'what you\'ll do', 'role overview',
                 'qualifications', 'requirements', 'what you\'ll need', 'basic qualifications',
-                'preferred skills', 'experience', 'technical skills', 'competencies'
+                'preferred skills', 'experience', 'technical skills', 'competencies',
+                'how you\'ll make a difference', 'the opportunity'
             ]
             
             # Define Low-Value/Noise Sections (Keywords to ignore or deprioritize)
@@ -109,7 +148,8 @@ with tab1:
                 'benefits', 'eeo', 'equal opportunity', 'affirmative action', 
                 'disclaimer', 'other duties', 'additional eligibility', 
                 'ear/itar', 'export control', 'citizenship', 'security clearance',
-                'accommodation', 'hiring process', 'about the company'
+                'accommodation', 'hiring process', 'about the company', 'how we\'ll support you',
+                'financial security', 'health', 'well-being', 'paid time', 'career growth'
             ]
 
             # Split JD into lines to find sections
@@ -142,11 +182,10 @@ with tab1:
             # Filter Logic: Keep only words that are NOT in the junk lists
             junk_words = {
                 'please', 'note', 'designed', 'cover', 'contain', 'comprehensive',
-                'listing', 'activities', 'duties', 'responsibilities', 'required',
-                'employee', 'change', 'time', 'notice', 'additional', 'eligibility',
-                'requirements', 'position', 'may', 'require', 'access', 'classified',
-                'information', 'restricted', 'sites', 'systems', 'determined',
-                'company', 'applicable', 'government', 'employment', 'role',
+                'listing', 'activities', 'required', 'employee', 'change', 'time', 
+                'notice', 'additional', 'eligibility', 'position', 'may', 'require', 
+                'access', 'classified', 'information', 'restricted', 'sites', 'systems', 
+                'determined', 'company', 'applicable', 'government', 'employment', 'role',
                 'contingent', 'upon', 'ability', 'obtain', 'maintain', 'security',
                 'clearance', 'other', 'authorization', 'satisfy', 'citizenship',
                 'imposed', 'law', 'regulation', 'executive', 'order', 'contract',
@@ -171,7 +210,16 @@ with tab1:
                 'troubleshooting', 'critical', 'outage', 'challenging', 'network',
                 'architecture', 'recruiting', 'making', 'high', 'impact',
                 'investment', 'combines', 'judgment', 'relentless', 'bias',
-                'toward', 'action', 'standards', 'accountability', 'results'
+                'toward', 'action', 'standards', 'accountability', 'results',
+                'banc', 'california', 'banks', 'family', 'offer', 'support',
+                'team', 'members', 'win', 'together', 'local', 'communities',
+                'foundation', 'partnering', 'organizations', 'promote', 'literacy',
+                'training', 'small', 'housing', 'more', 'success', 'powered',
+                'people', 'shared', 'commitment', 'delivering', 'meaningful',
+                'environment', 'entrepreneurial', 'thinking', 'encouraged',
+                'expected', 'empowered', 'informed', 'continue', 'grow', 'evolve',
+                'dedicated', 'wellbeing', 'comprehensive', 'robust', 'development',
+                'inclusive', 'programs', 'enable', 'best'
             }
 
             generic_words = {
@@ -187,20 +235,21 @@ with tab1:
                 'move', 'moved', 'live', 'lived', 'believe', 'hold', 'bring',
                 'brought', 'happen', 'write', 'wrote', 'sit', 'sat', 'stand',
                 'stood', 'lose', 'lost', 'pay', 'paid', 'meet', 'met', 'include',
-                'included', 'continue', 'set', 'learn', 'change', 'play', 'run',
-                'like', 'carry', 'break', 'within', 'across', 'along', 'among',
-                'around', 'before', 'behind', 'below', 'beneath', 'beside',
-                'between', 'beyond', 'during', 'except', 'inside', 'into', 'near',
-                'onto', 'upon', 'toward', 'throughout', 'minus', 'plus', 'versus',
-                'per', 'via', 'year', 'years', 'day', 'week', 'month', 'level',
-                'senior', 'junior', 'department', 'group', 'unit', 'field',
-                'industry', 'team', 'work', 'experience', 'ability', 'time'
+                'included', 'set', 'learn', 'play', 'run', 'like', 'carry', 
+                'break', 'within', 'across', 'along', 'among', 'around', 'before', 
+                'behind', 'below', 'beneath', 'beside', 'between', 'beyond', 
+                'during', 'except', 'inside', 'into', 'near', 'onto', 'upon', 
+                'toward', 'throughout', 'minus', 'plus', 'versus', 'per', 'via', 
+                'year', 'years', 'day', 'week', 'month', 'level', 'senior', 
+                'junior', 'department', 'group', 'unit', 'field', 'industry', 
+                'work', 'experience', 'ability', 'time', 'duties', 'responsibilities'
             }
 
             meaningful_missing = [
                 word for word in missing 
                 if word not in junk_words 
                 and word not in generic_words
+                and word not in current_industry_noise # Apply industry filter
                 and len(word) > 3
             ]
             
@@ -239,7 +288,7 @@ with tab1:
                 st.warning("No matching keywords found.")
             
             # 3. Missing Keywords
-            st.subheader("⚠️ Top Missing Keywords (Weighted)")
+            st.subheader(f"⚠️ Top Missing Keywords ({industry})")
             if prioritized_missing:
                 st.write(", ".join(prioritized_missing[:15]))
                 st.info(f"Total meaningful missing: {len(meaningful_missing)}. Focus on the top ones!")
